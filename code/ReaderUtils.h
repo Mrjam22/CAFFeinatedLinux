@@ -1,5 +1,13 @@
 #pragma once
 
+#ifndef _WIN32
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "zlib.h"
+#include <cstring>
+#endif
+
 const int SRC_ENDIANLITTLE = 0;
 const int SRC_ENDIANBIG = 1;
 
@@ -66,7 +74,7 @@ static char* InflateData(char* inputData, int level, size_t compedSize, size_t u
 	strm.zfree = Z_NULL;
 	strm.opaque = Z_NULL;
 
-	if (inflateInit(&strm, level) != Z_OK) {
+	if (inflateInit2(&strm, level) != Z_OK) {
 		printf("An error occured while trying to initialize inflate.\n");
 		free(in);
 		return inputData;

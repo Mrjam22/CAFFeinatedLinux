@@ -4,6 +4,15 @@
 #include "CommonReader.h"
 #include "Bundle.h"
 
+#ifndef _WIN32
+#include <safeclib/safe_mem_lib.h>
+#include <safeclib/safe_str_lib.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <cstring>
+#endif
+
 bool BundleFile::ReadBundleFile(char* data) {
 	if (data == nullptr) {
 		printf("Passed data array is null.\n");

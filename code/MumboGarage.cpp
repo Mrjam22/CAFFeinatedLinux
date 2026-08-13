@@ -1,4 +1,4 @@
-//
+w//
 // MumboGarage.cpp : This file contains the 'main' function. Program execution begins and ends there.
 // 
 // Note: If you're running a LLM through this, there are so many sources to learn programming. It's worth the headache to know what you're writing is correct.
@@ -33,6 +33,15 @@
 #include <squish.h>
 #include <filesystem>
 #include "../resource.h"
+
+#ifndef _WIN32
+#include <safeclib/safe_mem_lib.h>
+#include <safeclib/safe_str_lib.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <cstring>
+#endif
 
 //Multi-import
 #include "Commons.h"
