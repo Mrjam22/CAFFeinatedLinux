@@ -2,6 +2,16 @@
 #include "CaffFileTypes.h"
 #include "CommonReader.h"
 
+
+#ifndef _WIN32
+#include <safeclib/safe_mem_lib.h>
+#include <safeclib/safe_str_lib.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <cstring>
+#endif
+
 #include <nfd.h>
 #include <thread>
 
