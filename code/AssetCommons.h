@@ -1,6 +1,15 @@
 #pragma once
 #include "CommonReader.h"
 
+#ifndef _WIN32
+#include <safeclib/safe_mem_lib.h>
+#include <safeclib/safe_str_lib.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <cstring>
+#endif
+
 /// <summary>
 /// A large array of bytes (1024 entries) that are used for generating the aid hash for Nuts & Bolts and Kinect Sports.
 /// </summary>
