@@ -65,33 +65,10 @@ if(WIN32)
 
 else()
 
- add_library(glfw3 STATIC
-	 "${TP}/glfw/src/context.c"
-	 "${TP}/glfw/src/init.c"
-	 "${TP}/glfw/src/input.c"
-	 "${TP}/glfw/src/monitor.c"
-	 "${TP}/glfw/src/platform.c"
-	 "${TP}/glfw/src/vulkan.c"
-	 "${TP}/glfw/src/window.c"
-	 "${TP}/glfw/src/egl_context.c"
-	 "${TP}/glfw/src/osmesa_context.c"
-	 "${TP}/glfw/src/null_init.c"
-	 "${TP}/glfw/src/null_monitor.c"
-	 "${TP}/glfw/src/null_window.c"
-	 "${TP}/glfw/src/null_joystick.c"
-	 "${TP}/glfw/src/posix_time.c"
-	 "${TP}/glfw/src/posix_thread.c"
-	 "${TP}/glfw/src/posix_module.c"
-	 "${TP}/glfw/src/posix_poll.h"
-	 "${TP}/glfw/src/linux_joystick.c"
-	 "${TP}/glfw/src/x11_init.c"
-	 "${TP}/glfw/src/x11_monitor.c"
-	 "${TP}/glfw/src/x11_window.c"
-	 "${TP}/glfw/src/glx_context.c")
-     target_include_directories(glfw3 PUBLIC "${TP}/glfw/include")
-     target_compile_definitions(glfw3 PRIVATE _GLFW_X11)
+
+
      add_library(nfd STATIC "${TP}/nativefiledialog/src/nfd_gtk.cpp")
-	find_package(PkgConfig REQUIRED)
+	 find_package(PkgConfig REQUIRED)
      pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
      target_include_directories(nfd PRIVATE ${GTK3_INCLUDE_DIRS})
      target_link_libraries(nfd PUBLIC ${GTK3_LIBRARIES})
@@ -144,6 +121,7 @@ set_source_files_properties(${RES_ASSETS} PROPERTIES HEADER_FILE_ONLY TRUE)
 
 
 if(WIN32)
+ set_target_properties(glfw3 nfd zlibstatic squish PROPERTIES FOLDER "thirdparty")
  add_executable(CAFFeinated
 	 ${APP_SOURCES}
 	 ${APP_HEADERS}
@@ -154,6 +132,7 @@ if(WIN32)
 	 "${TP}/glad/src/glad.c"
 	 MumboGarage.rc)
 else()
+  set_target_properties(nfd zlibstatic squish PROPERTIES FOLDER "thirdparty")
   add_executable(CAFFeinated
 	 ${APP_SOURCES}
 	 ${APP_HEADERS}
@@ -174,14 +153,16 @@ target_include_directories(CAFFeinated PRIVATE
 target_compile_definitions(CAFFeinated PRIVATE
 	_CRT_SECURE_NO_WARNINGS UNICODE _UNICODE)
 
-target_link_libraries(CAFFeinated PRIVATE glfw3 nfd zlibstatic squish)
+target_link_libraries(CAFFeinated PRIVATE nfd zlibstatic squish)
 
 if(WIN32)
    target_link_options(CAFFeinated PRIVATE /FORCE:MULTIPLE /IGNORE:4006)
+    target_link_libraries(CAFFeinated PRIVATE  glfw3)
+
 endif()
 
 if(NOT WIN32)
-    target_link_libraries(CAFFeinated PRIVATE GL X11 randr xi xcursor xinerama pthread dl)
+    target_link_libraries(CAFFeinated PRIVATE glfw GL X11 Xi Xrandr Xinerama Xcursor rt m dl safec  pthread dl)
 endif()
 
 set_target_properties(CAFFeinated PROPERTIES
@@ -192,7 +173,7 @@ set_property(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
 			PROPERTY VS_STARTUP_PROJECT CAFFeinated)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-set_target_properties(glfw3 nfd zlibstatic squish PROPERTIES FOLDER "thirdparty")
+
 
 source_group("Source Files\\Imported" FILES
 	"${TP}/glad/src/glad.c" ${IMGUI_SOURCES})

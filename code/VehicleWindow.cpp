@@ -5,6 +5,16 @@
 #include "CommonReader.h"
 #include <nfd.h>
 
+
+#ifndef _WIN32
+#include <safeclib/safe_mem_lib.h>
+#include <safeclib/safe_str_lib.h>
+#include <stdio.h>
+#include <wchar.h>
+#include <stdlib.h>
+#include <string.h>
+#endif
+
 #ifndef VEHICLE_WINDOW
 #include "VehicleWindow.h"
 #endif

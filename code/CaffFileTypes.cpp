@@ -5,6 +5,15 @@
 #include <windows.h>
 #endif
 
+#ifndef _WIN32
+#include <safeclib/safe_mem_lib.h>
+#include <safeclib/safe_str_lib.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <cstring>
+#endif
+
 #include "CaffFileTypes.h"
 
 #pragma region Script

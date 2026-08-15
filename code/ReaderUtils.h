@@ -7,6 +7,7 @@
 #include <cstring>
 #endif
 
+
 const int SRC_ENDIANLITTLE = 0;
 const int SRC_ENDIANBIG = 1;
 
@@ -73,7 +74,7 @@ static char* InflateData(char* inputData, int level, size_t compedSize, size_t u
 	strm.zfree = Z_NULL;
 	strm.opaque = Z_NULL;
 
-	if (inflateInit2(&strm, level) != Z_OK) {
+	if (inflateInit(&strm) != Z_OK) {
 		printf("An error occured while trying to initialize inflate.\n");
 		free(in);
 		return inputData;
@@ -117,12 +118,12 @@ static char* InflateData(char* inputData, int level, size_t compedSize, size_t u
 }
 
 /* Decompress from file source to file dest until stream ends or EOF.
-   inf() returns Z_OK on success, Z_MEM_ERROR if memory could not be
-   allocated for processing, Z_DATA_ERROR if the deflate data is
-   invalid or incomplete, Z_VERSION_ERROR if the version of zlib.h and
-   the version of the library linked do not match, or Z_ERRNO if there
-   is an error reading or writing the files. */
-char* inf(FILE* source)
+ *  inf() returns Z_OK on success, Z_MEM_ERROR if memory could not be
+ *  allocated for processing, Z_DATA_ERROR if the deflate data is
+ *  invalid or incomplete, Z_VERSION_ERROR if the version of zlib.h and
+ *  the version of the library linked do not match, or Z_ERRNO if there
+ *  is an error reading or writing the files. */
+inline char* inf(FILE* source)
 {
 	int ret;
 	unsigned have;
@@ -163,12 +164,12 @@ char* inf(FILE* source)
 				return dest;
 			}
 			switch (ret) {
-			case Z_NEED_DICT:
-				ret = Z_DATA_ERROR;     /* and fall through */
-			case Z_DATA_ERROR:
-			case Z_MEM_ERROR:
-				(void)inflateEnd(&strm);
-				return dest;
+				case Z_NEED_DICT:
+					ret = Z_DATA_ERROR;     /* and fall through */
+				case Z_DATA_ERROR:
+				case Z_MEM_ERROR:
+					(void)inflateEnd(&strm);
+					return dest;
 			}
 			have = CHUNK - strm.avail_out;
 

@@ -432,7 +432,7 @@ public:
 	}
 };
 
-MarkerBase* CreateMarkerData(dbMarkerEnum markerType) {
+inline MarkerBase* CreateMarkerData(dbMarkerEnum markerType) {
 	switch (markerType) {
 	case marker_Collectable: { printf("COLLECTIBLE\n"); return new MarkerCollectible(); } break;
 	case marker_Portal: { printf("PORTAL\n"); return new MarkerPortal(); } break;

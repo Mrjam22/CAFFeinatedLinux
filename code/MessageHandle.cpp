@@ -9,6 +9,15 @@
 #include "MessageHandle.h"
 #endif
 
+#ifndef _WIN32
+#include <safeclib/safe_mem_lib.h>
+#include <safeclib/safe_str_lib.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <cstring>
+#endif
+
 char title[256];
 ErrorPrompt errorPromptParams;
 
@@ -20,7 +29,6 @@ void FireMessage(const char* message, ErrorType severity) {
 	errorPromptParams.errorSeverity = severity;
 
 	memset(title, 0, 256);
-
 	if (severity == ErrorType_None) {
 		CloseMessage();
 		return;
@@ -28,23 +36,24 @@ void FireMessage(const char* message, ErrorType severity) {
 
 	if (severity == ErrorType_Info) {
 		strcpy_s(title, 256, "Informational Message");
-		MessageBeep(MB_ICONINFORMATION);
+		//MessageBeep(MB_ICONINFORMATION);
 	}
 
 	if (severity == ErrorType_Warn) {
 		strcpy_s(title, 256, "Warning Message");
-		MessageBeep(MB_ICONEXCLAMATION);
+		//MessageBeep(MB_ICONEXCLAMATION);
 	}
 
 	if (severity == ErrorType_Error) {
 		strcpy_s(title, 256, "Error Message");
-		MessageBeep(MB_ICONERROR);
+		//MessageBeep(MB_ICONERROR);
 	}
 
 	if (severity == ErrorType_Critical) {
 		strcpy_s(title, 256, "Critical Message");
-		MessageBeep(MB_ICONERROR);
+		//MessageBeep(MB_ICONERROR);
 	}
+
 
 	errorPromptParams.showErrorPrompt = true;
 }

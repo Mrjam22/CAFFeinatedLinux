@@ -12,13 +12,33 @@
 #define ASSERT(fmt, ...) ((void)0)
 #define PRINT(fmt, ...) ((void)0)
 #else
-#define ASSERT(fmt, ...) (printf("%s %s %d - "##fmt,__FILE__, __func__, __LINE__, __VA_ARGS__))
-#define PRINT(fmt, ...) (printf(fmt, __VA_ARGS__))
 #endif
 
 #ifdef _WIN32 
+
+#define ASSERT(fmt, ...) (printf("%s %s %d - "##fmt,__FILE__, __func__, __LINE__, __VA_ARGS__))
+#define PRINT(fmt, ...) (printf(fmt, __VA_ARGS__))
+
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#endif
+
+
+#ifndef _WIN32
+
+#define ASSERT(fmt, ...) (printf("%s %s %d - "#fmt,__FILE__, __func__, __LINE__, ##__VA_ARGS__))
+#define PRINT(fmt, ...) (printf(fmt, ##__VA_ARGS__))
+
+
+#define MAX_PATH PATH_MAX
+#define RT_FONT ((const wchar_t*)(8))
+
+#include <safeclib/safe_mem_lib.h>
+#include <safeclib/safe_str_lib.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <cstring>
 #endif
 
 //Include all the necessary ImGui things we need.
@@ -203,9 +223,9 @@ int mainWindowCode() {
 
 	// Setup our icons for the window.
 	GLFWimage images[2];
-	images[0] = LoadResourceImageToGLFWImage(IDB_PNG8, L"PNG"); // Small Icon
-	images[1] = LoadResourceImageToGLFWImage(IDB_PNG9, L"PNG"); // Large Icon
-	glfwSetWindowIcon(window, 2, images);
+	//images[0] = LoadResourceImageToGLFWImage(IDB_PNG8, L"PNG"); // Small Icon
+	//images[1] = LoadResourceImageToGLFWImage(IDB_PNG9, L"PNG"); // Large Icon
+	//glfwSetWindowIcon(window, 2, images);
 
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 	{
@@ -230,17 +250,17 @@ int mainWindowCode() {
 	ImGui_ImplOpenGL3_Init();
 
 	// Preload all our icon PNGs so we can use them whenever.
-	RC_PNG_ANIMICON = LoadResourceImage(IDB_PNG1, L"PNG");
-	RC_PNG2 = LoadResourceImage(IDB_PNG2, L"PNG");
-	RC_PNG_VEHICON = LoadResourceImage(IDB_PNG3, L"PNG");
-	RC_PNG_VEHBLOCKICON = LoadResourceImage(IDB_PNG4, L"PNG");
-	RC_PNG_AUDIOICON = LoadResourceImage(IDB_PNG5, L"PNG");
-	RC_PNG_LISTICON = LoadResourceImage(IDB_PNG6, L"PNG");
-	RC_PNG_CHALICON = LoadResourceImage(IDB_PNG7, L"PNG");
-	RC_PNG_HAVOKICON = LoadResourceImage(IDB_PNG10, L"PNG");
+	//RC_PNG_ANIMICON = LoadResourceImage(IDB_PNG1, L"PNG");
+	//RC_PNG2 = LoadResourceImage(IDB_PNG2, L"PNG");
+	//RC_PNG_VEHICON = LoadResourceImage(IDB_PNG3, L"PNG");
+//	RC_PNG_VEHBLOCKICON = LoadResourceImage(IDB_PNG4, L"PNG");
+//	RC_PNG_AUDIOICON = LoadResourceImage(IDB_PNG5, L"PNG");
+//	RC_PNG_LISTICON = LoadResourceImage(IDB_PNG6, L"PNG");
+//	RC_PNG_CHALICON = LoadResourceImage(IDB_PNG7, L"PNG");
+//	RC_PNG_HAVOKICON = LoadResourceImage(IDB_PNG10, L"PNG");
 
-	LoadResourceFont(IDR_FONT1, RT_FONT, 1.25f); // Japanese Font (NotoSansJP)
-	LoadResourceFont(IDR_FONT2, RT_FONT, 1.25f); // Korean Font (NotoSansKR)
+	//LoadResourceFont(IDR_FONT1, RT_FONT, 1.25f); // Japanese Font (NotoSansJP)
+//	LoadResourceFont(IDR_FONT2, RT_FONT, 1.25f); // Korean Font (NotoSansKR)
 
 	imGuiWindowInfo.search = new char[128];
 	GetVehicleEditorWindowParameters()->vehicleBlockAddParams.outputPath = (char*)malloc(MAX_PATH);
@@ -1122,6 +1142,12 @@ void displayBundleInfo() {
 	int remainLeft = strLen - (end - currentFileName);
 
 	try {
+		printf("%d\n", remainLeft);
+		printf("   ");
+		printf(end);
+		printf("   ");
+		printf(filename);
+		printf("   ");
 		strncpy(filename, end + 1, remainLeft);
 		ImGui::Text("Filename: %s", filename);
 		ImGui::SeparatorText("Bundle Information");
@@ -4622,68 +4648,68 @@ static void openLoadSaveFile() {
 /// <param name="extraScale">Optional. Extra scaling to apply to the font if needed.</param>
 /// <returns>A pointer to the created ImFont object.</returns>
 static ImFont* LoadResourceFont(int resourceName, const wchar_t* resourceType, float extraScale = 1) {
-	HRESULT hr = S_OK;
-
-	// Resource management.
-	HRSRC imageResHandle = NULL;
-	HGLOBAL imageResDataHandle = NULL;
-	unsigned char* pImageFile = NULL;
-	DWORD imageFileSize = 0;
-
-	// Locate the resource in the application's executable.
-	imageResHandle = FindResource(
-		NULL,             // This component.
-		MAKEINTRESOURCE(resourceName),   // Resource name.
-		resourceType);        // Resource type.
-
-	hr = (imageResHandle ? S_OK : E_FAIL);
-
-	// Load the resource to the HGLOBAL.
-	if (SUCCEEDED(hr)) {
-		imageResDataHandle = LoadResource(NULL, imageResHandle);
-		hr = (imageResDataHandle ? S_OK : E_FAIL);
-	}
-	else {
-		PRINT("Failed to find resource.\n");
-	}
-
-	// Lock the resource to retrieve memory pointer.
-	if (SUCCEEDED(hr)) {
-		pImageFile = (unsigned char*)LockResource(imageResDataHandle);
-		hr = (pImageFile ? S_OK : E_FAIL);
-	}
-	else {
-		PRINT("Failed to load resource.\n");
-	}
-
-	// Calculate the size.
-	if (SUCCEEDED(hr)) {
-		imageFileSize = SizeofResource(NULL, imageResHandle);
-		hr = (imageFileSize ? S_OK : E_FAIL);
-	}
-	else {
-		PRINT("Failed to lock resource.\n");
-	}
-
-	ImFontConfig cfg;
-	cfg.ExtraSizeScale = extraScale; // Extra scaling is needed for the pick of font for Japanese and Korean characters (Noto Sans).
-	cfg.MergeMode = true;
-
-	PRINT("%d\n", (int)imageFileSize);
-
-	void* fontFile = ImGui::MemAlloc((int)imageFileSize);
-	memcpy(fontFile, pImageFile, imageFileSize);
-
-	// Calculate the size.
-	if (SUCCEEDED(hr)) {
-		UnlockSegment(imageResDataHandle);
-		FreeResource(imageResDataHandle);
-	}
-	else {
-		PRINT("Failed to lock resource.\n");
-	}
-
-	return ImGui::GetIO().Fonts->AddFontFromMemoryTTF(fontFile, (int)imageFileSize, 0.f, &cfg);
+	// HRESULT hr = S_OK;
+ //
+	// // Resource management.
+	// HRSRC imageResHandle = NULL;
+	// HGLOBAL imageResDataHandle = NULL;
+	// unsigned char* pImageFile = NULL;
+	// DWORD imageFileSize = 0;
+ //
+	// // Locate the resource in the application's executable.
+	// imageResHandle = FindResource(
+	// 	NULL,             // This component.
+	// 	MAKEINTRESOURCE(resourceName),   // Resource name.
+	// 	resourceType);        // Resource type.
+ //
+	// hr = (imageResHandle ? S_OK : E_FAIL);
+ //
+	// // Load the resource to the HGLOBAL.
+	// if (SUCCEEDED(hr)) {
+	// 	imageResDataHandle = LoadResource(NULL, imageResHandle);
+	// 	hr = (imageResDataHandle ? S_OK : E_FAIL);
+	// }
+	// else {
+	// 	PRINT("Failed to find resource.\n");
+	// }
+ //
+	// // Lock the resource to retrieve memory pointer.
+	// if (SUCCEEDED(hr)) {
+	// 	pImageFile = (unsigned char*)LockResource(imageResDataHandle);
+	// 	hr = (pImageFile ? S_OK : E_FAIL);
+	// }
+	// else {
+	// 	PRINT("Failed to load resource.\n");
+	// }
+ //
+	// // Calculate the size.
+	// if (SUCCEEDED(hr)) {
+	// 	imageFileSize = SizeofResource(NULL, imageResHandle);
+	// 	hr = (imageFileSize ? S_OK : E_FAIL);
+	// }
+	// else {
+	// 	PRINT("Failed to lock resource.\n");
+	// }
+ //
+	// ImFontConfig cfg;
+	// cfg.ExtraSizeScale = extraScale; // Extra scaling is needed for the pick of font for Japanese and Korean characters (Noto Sans).
+	// cfg.MergeMode = true;
+ //
+	// PRINT("%d\n", (int)imageFileSize);
+ //
+	// void* fontFile = ImGui::MemAlloc((int)imageFileSize);
+	// memcpy(fontFile, pImageFile, imageFileSize);
+ //
+	// // Calculate the size.
+	// if (SUCCEEDED(hr)) {
+	// 	UnlockSegment(imageResDataHandle);
+	// 	FreeResource(imageResDataHandle);
+	// }
+	// else {
+	// 	PRINT("Failed to lock resource.\n");
+	// }
+ //
+	// return ImGui::GetIO().Fonts->AddFontFromMemoryTTF(fontFile, (int)imageFileSize, 0.f, &cfg);
 }
 
 static unsigned char* GetRawImageData_Base(char* data, int width, int height, int type) {
@@ -5060,115 +5086,115 @@ static GLuint LoadImageFromData(unsigned char* data, int width, int height,int f
 /// <param name="resourceType"></param>
 /// <returns>If successful, the target of the texture.</returns>
 static GLuint LoadResourceImage(int resourceName, const wchar_t* resourceType) {
-	HRESULT hr = S_OK;
-
-	// Resource management.
-	HRSRC imageResHandle = NULL;
-	HGLOBAL imageResDataHandle = NULL;
-	unsigned char* pImageFile = NULL;
-	DWORD imageFileSize = 0;
-
-	// Locate the resource in the application's executable.
-	imageResHandle = FindResource(
-		NULL,             // This component.
-		MAKEINTRESOURCE(resourceName),   // Resource name.
-		resourceType);        // Resource type.
-
-	hr = (imageResHandle ? S_OK : E_FAIL);
-
-	// Load the resource to the HGLOBAL.
-	if (SUCCEEDED(hr)) {
-		imageResDataHandle = LoadResource(NULL, imageResHandle);
-		hr = (imageResDataHandle ? S_OK : E_FAIL);
-	}
-
-	// Lock the resource to retrieve memory pointer.
-	if (SUCCEEDED(hr)) {
-		pImageFile = (unsigned char*)LockResource(imageResDataHandle);
-		hr = (pImageFile ? S_OK : E_FAIL);
-	}
-
-	// Calculate the size.
-	if (SUCCEEDED(hr)) {
-		imageFileSize = SizeofResource(NULL, imageResHandle);
-		hr = (imageFileSize ? S_OK : E_FAIL);
-	}
-
-	GLuint tex;
-	int w;
-	int h;
-	int comp;
-	unsigned char* image = stbi_load_from_memory(pImageFile, imageFileSize, &w, &h, &comp, STBI_rgb_alpha);
-
-	if (image == nullptr)
-		throw(std::string("Failed to load texture"));
-
-	glGenTextures(1, &tex);
-
-	glBindTexture(GL_TEXTURE_2D, tex);
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
-
-	glBindTexture(GL_TEXTURE_2D, 0);
-
-	stbi_image_free(image);
-
-	return tex;
+	// HRESULT hr = S_OK;
+ //
+	// // Resource management.
+	// HRSRC imageResHandle = NULL;
+	// HGLOBAL imageResDataHandle = NULL;
+	// unsigned char* pImageFile = NULL;
+	// DWORD imageFileSize = 0;
+ //
+	// // Locate the resource in the application's executable.
+	// imageResHandle = FindResource(
+	// 	NULL,             // This component.
+	// 	MAKEINTRESOURCE(resourceName),   // Resource name.
+	// 	resourceType);        // Resource type.
+ //
+	// hr = (imageResHandle ? S_OK : E_FAIL);
+ //
+	// // Load the resource to the HGLOBAL.
+	// if (SUCCEEDED(hr)) {
+	// 	imageResDataHandle = LoadResource(NULL, imageResHandle);
+	// 	hr = (imageResDataHandle ? S_OK : E_FAIL);
+	// }
+ //
+	// // Lock the resource to retrieve memory pointer.
+	// if (SUCCEEDED(hr)) {
+	// 	pImageFile = (unsigned char*)LockResource(imageResDataHandle);
+	// 	hr = (pImageFile ? S_OK : E_FAIL);
+	// }
+ //
+	// // Calculate the size.
+	// if (SUCCEEDED(hr)) {
+	// 	imageFileSize = SizeofResource(NULL, imageResHandle);
+	// 	hr = (imageFileSize ? S_OK : E_FAIL);
+	// }
+ //
+	// GLuint tex;
+	// int w;
+	// int h;
+	// int comp;
+	// unsigned char* image = stbi_load_from_memory(pImageFile, imageFileSize, &w, &h, &comp, STBI_rgb_alpha);
+ //
+	// if (image == nullptr)
+	// 	throw(std::string("Failed to load texture"));
+ //
+	// glGenTextures(1, &tex);
+ //
+	// glBindTexture(GL_TEXTURE_2D, tex);
+ //
+	// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+ //
+	// glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
+ //
+	// glBindTexture(GL_TEXTURE_2D, 0);
+ //
+	// stbi_image_free(image);
+ //
+	// return tex;
 }
 
 static GLFWimage LoadResourceImageToGLFWImage(int resourceName, const wchar_t* resourceType) {
-	HRESULT hr = S_OK;
-
-	// Resource management.
-	HRSRC imageResHandle = NULL;
-	HGLOBAL imageResDataHandle = NULL;
-	unsigned char* pImageFile = NULL;
-	DWORD imageFileSize = 0;
-
-	// Locate the resource in the application's executable.
-	imageResHandle = FindResource(
-		NULL,             // This component.
-		MAKEINTRESOURCE(resourceName),   // Resource name.
-		resourceType);        // Resource type.
-
-	hr = (imageResHandle ? S_OK : E_FAIL);
-
-	// Load the resource to the HGLOBAL.
-	if (SUCCEEDED(hr)) {
-		imageResDataHandle = LoadResource(NULL, imageResHandle);
-		hr = (imageResDataHandle ? S_OK : E_FAIL);
-	}
-
-	// Lock the resource to retrieve memory pointer.
-	if (SUCCEEDED(hr)) {
-		pImageFile = (unsigned char*)LockResource(imageResDataHandle);
-		hr = (pImageFile ? S_OK : E_FAIL);
-	}
-
-	// Calculate the size.
-	if (SUCCEEDED(hr)) {
-		imageFileSize = SizeofResource(NULL, imageResHandle);
-		hr = (imageFileSize ? S_OK : E_FAIL);
-	}
-
-	GLuint tex;
-	int w;
-	int h;
-	int comp;
-	unsigned char* image = stbi_load_from_memory(pImageFile, imageFileSize, &w, &h, &comp, STBI_rgb_alpha);
-
-	if (image == nullptr)
-		throw(std::string("Failed to load texture"));
-
-	GLFWimage img;
-	img.height = h;
-	img.width = w;
-	img.pixels = image;
-
-	return img;
+	// HRESULT hr = S_OK;
+ //
+	// // Resource management.
+	// HRSRC imageResHandle = NULL;
+	// HGLOBAL imageResDataHandle = NULL;
+	// unsigned char* pImageFile = NULL;
+	// DWORD imageFileSize = 0;
+ //
+	// // Locate the resource in the application's executable.
+	// imageResHandle = FindResource(
+	// 	NULL,             // This component.
+	// 	MAKEINTRESOURCE(resourceName),   // Resource name.
+	// 	resourceType);        // Resource type.
+ //
+	// hr = (imageResHandle ? S_OK : E_FAIL);
+ //
+	// // Load the resource to the HGLOBAL.
+	// if (SUCCEEDED(hr)) {
+	// 	imageResDataHandle = LoadResource(NULL, imageResHandle);
+	// 	hr = (imageResDataHandle ? S_OK : E_FAIL);
+	// }
+ //
+	// // Lock the resource to retrieve memory pointer.
+	// if (SUCCEEDED(hr)) {
+	// 	pImageFile = (unsigned char*)LockResource(imageResDataHandle);
+	// 	hr = (pImageFile ? S_OK : E_FAIL);
+	// }
+ //
+	// // Calculate the size.
+	// if (SUCCEEDED(hr)) {
+	// 	imageFileSize = SizeofResource(NULL, imageResHandle);
+	// 	hr = (imageFileSize ? S_OK : E_FAIL);
+	// }
+ //
+	// GLuint tex;
+	// int w;
+	// int h;
+	// int comp;
+	// unsigned char* image = stbi_load_from_memory(pImageFile, imageFileSize, &w, &h, &comp, STBI_rgb_alpha);
+ //
+	// if (image == nullptr)
+	// 	throw(std::string("Failed to load texture"));
+ //
+	// GLFWimage img;
+	// img.height = h;
+	// img.width = w;
+	// img.pixels = image;
+ //
+	// return img;
 }
 
 // GLFW
