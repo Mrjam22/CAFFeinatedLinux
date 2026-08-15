@@ -15,7 +15,7 @@
 
 #ifdef _WIN32 
 
-#define ASSERT(fmt, ...) (printf("%s %s %d - "##fmt,__FILE__, __func__, __LINE__, __VA_ARGS__))
+#define ASSERT(fmt, ...) (printf("%s %s %d - "#fmt,__FILE__, __func__, __LINE__, ##__VA_ARGS__))
 #define PRINT(fmt, ...) (printf(fmt, __VA_ARGS__))
 
 #define WIN32_LEAN_AND_MEAN
