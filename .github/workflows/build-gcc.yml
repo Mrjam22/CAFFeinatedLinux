@@ -24,11 +24,6 @@ jobs:
         with:
         with_clang: false
 
-      - name: Verify Compiler
-       run: |
-        gcc --version
-        g++ --version
-        make --version
 
       - name: Configure
         run: cmake -G "MinGW Makefiles" -A x64 -B build
