@@ -2,7 +2,7 @@ name: build-gcc
 
 on:
   push:
-    branches: ["master","linux"]
+    branches: ["master", "linux"]
   pull_request:
     branches: ["master", "linux"]
 
@@ -22,11 +22,10 @@ jobs:
       - name: Set up GCC (MinGW)
         uses: bwoodsend/setup-winlibs-action@v1
         with:
-        with_clang: false
-
+          with_clang: false
 
       - name: Configure
-        run: cmake -G "MinGW Makefiles" -A x64 -B build
+        run: cmake -G "MinGW Makefiles" -B build -DCMAKE_BUILD_TYPE=Release
 
       - name: Build
         run: cmake --build build --config Release
