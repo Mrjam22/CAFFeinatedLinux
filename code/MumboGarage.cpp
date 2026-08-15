@@ -8,7 +8,7 @@ w//
 #pragma comment(lib, "OpenGL32.lib")
 
 #ifdef NDEBUG
-#define IMGUI_DEBUG_PRINTF 
+#define IMGUI_DEBUG_PRINTF
 #define ASSERT(fmt, ...) ((void)0)
 #define PRINT(fmt, ...) ((void)0)
 #else
@@ -127,7 +127,7 @@ static GhoulBundle ghoulBundleFile;
 
 static DBBundle PinataDbBundleFile;
 
-static RPKFile* rpkFile;
+static RPKFile rpkFile;
 
 // Various file allocations;
 static int assetType = -1;
@@ -255,7 +255,6 @@ int mainWindowCode() {
 	GetVehicleEditorWindowParameters()->vehicleBlockAddParams.outputPath = (char*)malloc(MAX_PATH);
 	memset(imGuiWindowInfo.search, 0, 128);
 	bundleSetup.bufferedSaves = (BufferedSave*)malloc(0);
-	rpkFile = new RPKFile();
 	getLoctextWindowParams()->loctextFilePath = new char[MAX_PATH];
 
 	NFD_Init();
@@ -496,12 +495,12 @@ void buildBaseImGuiWindow() {
 
 		// Rare Replay RPK Type
 		if (imGuiWindowInfo.saveData.targetType == RR_RPK) {
-			if (rpkFile->isReady) {
+			if (rpkFile.isReady) {
 				fileType = CaffType::RR_RPK;
 
 				imGuiWindowInfo.saveData.targetType = NONE;
 			}
-			if (rpkFile->hasErrored == true) {
+			if (rpkFile.hasErrored == true) {
 				fileType = NONE;
 
 				imGuiWindowInfo.saveData.targetType = NONE;
@@ -1071,13 +1070,8 @@ static void openRareRPKFile() {
 		sprintf(currentFileName, "%s", outPath);
 		PRINT("File picked: %s\n", currentFileName);
 
-		if (rpkFile == nullptr) {
-			rpkFile = new RPKFile();
-		}
-
-		imGuiWindowInfo.saveData.targetType = RR_RPK;
-		imGuiWindowInfo.saveData.loadThread = std::thread(&RPKFile::readStandaloneRPKFile, rpkFile, currentFileName);
-		imGuiWindowInfo.saveData.loadThread.detach();
+		//imGuiWindowInfo.saveData.targetType = RR_RPK;
+		std::thread(&readOtherSupportedFile, CaffType::RR_RPK).detach();
 	}
 	else {
 	}
@@ -1295,7 +1289,7 @@ void displayRPKInfo() {
 		ImGui::SeparatorText("File Information");
 
 		ImGui::Spacing();
-		ImGui::Text("Num. of Files - %d", rpkFile->fileCount);
+		ImGui::Text("Num. of Files - %d", rpkFile.fileCount);
 	}
 	catch (int e) {
 	}
@@ -1639,9 +1633,9 @@ void displayActiveFileProperty() {
 			activeSect = bundleFile.V36Bundle->getFileData(currentFileName, idData);
 
 			SetupLoadingPromptWidget("Currently loading the loctext file. Please wait.");
-			std::thread(&readLoctextFile, activeSect, lbl).detach();
+			printf("Loading loctext from file \"%s\".\n", lbl);
+			std::thread(&readLoctextFile, activeSect, bundleFile.V36Bundle->header.byteswapFlags).detach();
 			AssignLoctextFilename(lbl);
-			getLoctextWindowParams()->activeLoctext->startEndianness = bundleFile.V36Bundle->header.byteswapFlags;
 		}
 		break;
 	case 0x19:
@@ -1850,7 +1844,7 @@ void displayActiveBundleV31Property() {
 				char* activeSect = bundleFile.V31Bundle->getSectionData(0);
 
 				SetupLoadingPromptWidget("Currently loading the loctext file. Please wait.");
-				std::thread(&readLoctextFile, activeSect, filename).detach();
+				std::thread(&readLoctextFile, activeSect, bundleFile.V31Bundle->header.byteswapFlags).detach();
 				AssignLoctextFilename(filename);
 				getLoctextWindowParams()->activeLoctext->startEndianness = bundleFile.V31Bundle->header.byteswapFlags;
 			}
@@ -2233,7 +2227,7 @@ void displayActiveBundleV26Property() {
 			char* activeSect = bundleFile.V26Bundle->getSectionData(0);
 
 			SetupLoadingPromptWidget("Currently loading the loctext file. Please wait.");
-			std::thread(&readLoctextFile, activeSect, filename).detach();
+			std::thread(&readLoctextFile, activeSect, 0).detach();
 		}
 		break;
 	case V31_PDZPackage:
@@ -2478,8 +2472,8 @@ void displayActiveGhoulDemandProperty() {
 			memcpy(dataSect, ghoulDemandFile.dataPtr + ghoulDemandFile.dataSectOffset, ghoulDemandFile.dataSectSize);
 
 			SetupLoadingPromptWidget("Currently loading the loctext file. Please wait.");
-			std::thread(&readLoctextFile, dataSect, currentFileName).detach();
-			getLoctextWindowParams()->activeLoctext->startEndianness = 0;
+			std::thread(&readLoctextFile, dataSect, 0).detach();
+			//getLoctextWindowParams()->activeLoctext->startEndianness = 0;
 		}
 		break;
 	}
@@ -2726,29 +2720,29 @@ void displayActiveRPKFileProperty() {
 	memset(lbl, 0, 1024);
 	memset(type, 0, 32);
 
-	char* ptr = strrchr(rpkFile->fileEntries[fileId].fileName, '/');
+	char* ptr = strrchr(rpkFile.fileEntries[fileId].fileName, '/');
 	if (ptr != NULL) {
 		strcpy(lbl, ptr + 1);
 	}
 	else {
-		strcpy(lbl, rpkFile->fileEntries[fileId].fileName);
+		strcpy(lbl, rpkFile.fileEntries[fileId].fileName);
 	}
 
 	ImGui::Text("Filename:\t%s", lbl);
-	ImGui::Text("File Offset in RPK:\t%d", rpkFile->fileEntries[fileId].dataOffs);
-	ImGui::Text("File Size:\t%d", rpkFile->fileEntries[fileId].dataSize);
-	ImGui::Text("UNK VAL 1:\t%d", rpkFile->fileEntries[fileId].unk2);
-	ImGui::Text("UNK VAL 2:\t%d", rpkFile->fileEntries[fileId].unk4);
+	ImGui::Text("File Offset in RPK:\t%d", rpkFile.fileEntries[fileId].dataOffs);
+	ImGui::Text("File Size:\t%d", rpkFile.fileEntries[fileId].dataSize);
+	ImGui::Text("UNK VAL 1:\t%d", rpkFile.fileEntries[fileId].unk2);
+	ImGui::Text("UNK VAL 2:\t%d", rpkFile.fileEntries[fileId].unk4);
 	//ImGui::Text("Asset Type: %d (%s)", ghoulBundleFile.fileEntries[fileId].type, type);
 
-	if (rpkFile->fileEntries[fileId].dataSize != 0) {
+	if (rpkFile.fileEntries[fileId].dataSize != 0) {
 		ImGui::SeparatorText("File Options");
 
 		ImGui::PushID("export");
 		if (ImGui::Button("Export File")) {
-			char* activeSect = rpkFile->getFileData(fileId);
+			char* activeSect = rpkFile.getFileData(fileId);
 
-			writeDataToFile(lbl, "", activeSect, rpkFile->fileEntries[fileId].dataSize);
+			writeDataToFile(lbl, "", activeSect, rpkFile.fileEntries[fileId].dataSize);
 		}
 		ImGui::PopID();
 	}
@@ -3601,17 +3595,17 @@ void fillGhouliesBundleFileList() {
 void fillRPKFileList() {
 	ImGui::Text("File List");
 	ImGui::Separator();
-	for (int i = 0; i < rpkFile->fileCount; i++) {
+	for (int i = 0; i < rpkFile.fileCount; i++) {
 		ImGui::PushID(i);
 
 		if (strlen(imGuiWindowInfo.search) != 0) {
-			if (strstr(rpkFile->fileEntries[i].fileName, imGuiWindowInfo.search) == NULL) {
+			if (strstr(rpkFile.fileEntries[i].fileName, imGuiWindowInfo.search) == NULL) {
 				ImGui::PopID();
 				continue;
 			}
 		}
 
-		if (ImGui::Selectable(rpkFile->fileEntries[i].fileName, fileId == i)) {
+		if (ImGui::Selectable(rpkFile.fileEntries[i].fileName, fileId == i)) {
 			if (fileId == i) {
 				fileId = -1;
 				fileIdx = -1;
@@ -3709,7 +3703,7 @@ void readMarkerFile(char* data) {
 	CloseLoadingPromptWidget();
 }
 
-void readLoctextFile(char* data, char* fileName) {
+void readLoctextFile(char* data, int startEndian) {
 	LoctextWindowParams* locParams = getLoctextWindowParams();
 	locParams->ready = false;
 
@@ -3718,9 +3712,12 @@ void readLoctextFile(char* data, char* fileName) {
 		locParams->activeLoctext = nullptr;
 	}
 
-	printf("Loading loctext from file \"%s\".\n", fileName);
 	locParams->activeLoctext = new Loctext();
 	locParams->activeLoctext->ReadLoctext(data);
+	if (startEndian == 0 || startEndian == 1) {
+		locParams->activeLoctext->startEndianness = startEndian;
+	}
+	
 
 	locParams->ready = true;
 
@@ -3951,7 +3948,11 @@ void readOtherSupportedFile(int type) {
 	}
 
 	if (type == CaffType::RR_RPK) {
-
+		if (!rpkFile.readStandaloneRPKFile(currentFileName)) {
+			CloseLoadingPromptWidget();
+			FireMessage("Either the file provided is bad or this is not a valid RPK file.\n", ErrorType_Warn);
+			imGuiWindowInfo.saveData.targetType = NONE;
+		}
 	}
 
 	CloseLoadingPromptWidget();
@@ -4206,13 +4207,8 @@ void disposeAndCloseActiveFile() {
 	}
 
 	ghoulBundleFile.ClearBundleFileData();
-
 	PinataDbBundleFile.ClearActiveBundleData();
-
-	if (rpkFile != nullptr) {
-		delete(rpkFile);
-		rpkFile = nullptr;
-	}
+	rpkFile.ClearActiveData();
 
 	fileId = -1;
 	fileIdx = -1;
