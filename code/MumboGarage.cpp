@@ -10,7 +10,6 @@
 #ifdef NDEBUG
 #define IMGUI_DEBUG_PRINTF
 #define ASSERT(fmt, ...) ((void)0)
-#define PRINT(fmt, ...) ((void)0)
 #else
 #endif
 
@@ -30,8 +29,10 @@
 #define PRINT(fmt, ...) (printf(fmt, ##__VA_ARGS__))
 
 
-#define MAX_PATH PATH_MAX
-#define RT_FONT ((const wchar_t*)(8))
+//#define MAX_PATH PATH_MAX
+
+
+#define MAX_PATH 260
 
 #include <safeclib/safe_mem_lib.h>
 #include <safeclib/safe_str_lib.h>
@@ -202,6 +203,10 @@ int mainWindowCode() {
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
+   	#ifndef _WIN32
+	glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_X11);
+    #endif
+
 	// Set the locale
 	setlocale(LC_ALL, "en_US.UTF-8");
 
@@ -223,9 +228,47 @@ int mainWindowCode() {
 
 	// Setup our icons for the window.
 	GLFWimage images[2];
-	//images[0] = LoadResourceImageToGLFWImage(IDB_PNG8, L"PNG"); // Small Icon
-	//images[1] = LoadResourceImageToGLFWImage(IDB_PNG9, L"PNG"); // Large Icon
-	//glfwSetWindowIcon(window, 2, images);
+
+	#ifdef _WIN32
+	images[0] = LoadResourceImageToGLFWImage(IDB_PNG8, L"PNG"); // Small Icon
+	images[1] = LoadResourceImageToGLFWImage(IDB_PNG9, L"PNG"); // Large Icon
+    #endif
+
+	#ifndef _WIN32
+
+
+	int width, height, channels;
+	unsigned char* data = stbi_load("./resource/icon.png", &width, &height, &channels, 4);
+
+	int width2, height2, channels2;
+	unsigned char* data2 = stbi_load("./resource/icon_large.png", &width2, &height2, &channels2, 4);
+
+	if (data) {
+
+		GLFWimage icon;
+		icon.width = width;
+		icon.height = height;
+		icon.pixels = data;
+		images[0] = icon;
+		//stbi_image_free(data);
+	}
+
+	if (data2) {
+
+		GLFWimage icon2;
+		icon2.width = width2;
+		icon2.height = height2;
+		icon2.pixels = data2;
+		images[1] = icon2;
+		//stbi_image_free(data2);
+
+	}
+
+	#endif
+
+	glfwSetWindowIcon(window, 2, images);
+	stbi_image_free(data);
+	stbi_image_free(data2);
 
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 	{
@@ -266,7 +309,7 @@ int mainWindowCode() {
 	GetVehicleEditorWindowParameters()->vehicleBlockAddParams.outputPath = (char*)malloc(MAX_PATH);
 	memset(imGuiWindowInfo.search, 0, 128);
 	bundleSetup.bufferedSaves = (BufferedSave*)malloc(0);
-	getLoctextWindowParams()->loctextFilePath = new char[MAX_PATH];
+	getLoctextWindowParams()->loctextFilePath = new char[260];
 
 	NFD_Init();
 
@@ -1142,12 +1185,6 @@ void displayBundleInfo() {
 	int remainLeft = strLen - (end - currentFileName);
 
 	try {
-		printf("%d\n", remainLeft);
-		printf("   ");
-		printf(end);
-		printf("   ");
-		printf(filename);
-		printf("   ");
 		strncpy(filename, end + 1, remainLeft);
 		ImGui::Text("Filename: %s", filename);
 		ImGui::SeparatorText("Bundle Information");
@@ -5145,57 +5182,60 @@ static GLuint LoadResourceImage(int resourceName, const wchar_t* resourceType) {
 	// return tex;
 }
 
+
+#ifdef _WIN32
 static GLFWimage LoadResourceImageToGLFWImage(int resourceName, const wchar_t* resourceType) {
-	// HRESULT hr = S_OK;
- //
-	// // Resource management.
-	// HRSRC imageResHandle = NULL;
-	// HGLOBAL imageResDataHandle = NULL;
-	// unsigned char* pImageFile = NULL;
-	// DWORD imageFileSize = 0;
- //
-	// // Locate the resource in the application's executable.
-	// imageResHandle = FindResource(
-	// 	NULL,             // This component.
-	// 	MAKEINTRESOURCE(resourceName),   // Resource name.
-	// 	resourceType);        // Resource type.
- //
-	// hr = (imageResHandle ? S_OK : E_FAIL);
- //
-	// // Load the resource to the HGLOBAL.
-	// if (SUCCEEDED(hr)) {
-	// 	imageResDataHandle = LoadResource(NULL, imageResHandle);
-	// 	hr = (imageResDataHandle ? S_OK : E_FAIL);
-	// }
- //
-	// // Lock the resource to retrieve memory pointer.
-	// if (SUCCEEDED(hr)) {
-	// 	pImageFile = (unsigned char*)LockResource(imageResDataHandle);
-	// 	hr = (pImageFile ? S_OK : E_FAIL);
-	// }
- //
-	// // Calculate the size.
-	// if (SUCCEEDED(hr)) {
-	// 	imageFileSize = SizeofResource(NULL, imageResHandle);
-	// 	hr = (imageFileSize ? S_OK : E_FAIL);
-	// }
- //
-	// GLuint tex;
-	// int w;
-	// int h;
-	// int comp;
-	// unsigned char* image = stbi_load_from_memory(pImageFile, imageFileSize, &w, &h, &comp, STBI_rgb_alpha);
- //
-	// if (image == nullptr)
-	// 	throw(std::string("Failed to load texture"));
- //
-	// GLFWimage img;
-	// img.height = h;
-	// img.width = w;
-	// img.pixels = image;
- //
-	// return img;
+	HRESULT hr = S_OK;
+
+	// Resource management.
+	HRSRC imageResHandle = NULL;
+	HGLOBAL imageResDataHandle = NULL;
+	unsigned char* pImageFile = NULL;
+	DWORD imageFileSize = 0;
+
+	// Locate the resource in the application's executable.
+	imageResHandle = FindResource(
+		NULL,             // This component.
+		MAKEINTRESOURCE(resourceName),   // Resource name.
+		resourceType);        // Resource type.
+
+	hr = (imageResHandle ? S_OK : E_FAIL);
+
+	// Load the resource to the HGLOBAL.
+	if (SUCCEEDED(hr)) {
+		imageResDataHandle = LoadResource(NULL, imageResHandle);
+		hr = (imageResDataHandle ? S_OK : E_FAIL);
+	}
+
+	// Lock the resource to retrieve memory pointer.
+	if (SUCCEEDED(hr)) {
+		pImageFile = (unsigned char*)LockResource(imageResDataHandle);
+		hr = (pImageFile ? S_OK : E_FAIL);
+	}
+
+	// Calculate the size.
+	if (SUCCEEDED(hr)) {
+		imageFileSize = SizeofResource(NULL, imageResHandle);
+		hr = (imageFileSize ? S_OK : E_FAIL);
+	}
+
+	GLuint tex;
+	int w;
+	int h;
+	int comp;
+	unsigned char* image = stbi_load_from_memory(pImageFile, imageFileSize, &w, &h, &comp, STBI_rgb_alpha);
+
+	if (image == nullptr)
+		throw(std::string("Failed to load texture"));
+
+	GLFWimage img;
+	img.height = h;
+	img.width = w;
+	img.pixels = image;
+
+	return img;
 }
+#endif
 
 // GLFW
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
