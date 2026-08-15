@@ -19,12 +19,12 @@ jobs:
         with:
           submodules: recursive
 
-        - name: Set up GCC (MinGW)
-          uses: bwoodsend/setup-winlibs-action@v1
-          with:
-          with_clang: false
+      - name: Set up GCC (MinGW)
+        uses: bwoodsend/setup-winlibs-action@v1
+        with:
+        with_clang: false
 
-     - name: Verify Compiler
+      - name: Verify Compiler
        run: |
         gcc --version
         g++ --version
