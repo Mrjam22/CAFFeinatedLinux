@@ -267,8 +267,6 @@ int mainWindowCode() {
 	#endif
 
 	glfwSetWindowIcon(window, 2, images);
-	stbi_image_free(data);
-	stbi_image_free(data2);
 
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 	{
