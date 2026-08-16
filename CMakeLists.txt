@@ -184,6 +184,8 @@ if(MSVC)
 
 endif()
 
+
+
 if(NOT WIN32)
     set(_GLFW_X11 1)
     target_link_libraries(CAFFeinated PRIVATE GL X11 Xi Xrandr Xinerama Xcursor rt m dl safec  pthread dl)
@@ -252,3 +254,11 @@ source_group("Header Files\\Program Segments" FILES
 source_group("Resource Files" FILES MumboGarage.rc "${RES}/exeIcon.ico")
 source_group("Resource Files\\images" FILES ${RES_IMAGES})
 source_group("Resource Files\\fonts" FILES ${RES_FONTS})
+
+add_custom_command(
+    TARGET CAFFeinated
+    POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E echo "Executable Path: $<TARGET_FILE:CAFFeinated>"
+    COMMENT "Printing full path to the executable..."
+    VERBATIM
+)
