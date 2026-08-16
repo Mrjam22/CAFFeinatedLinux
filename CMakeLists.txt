@@ -179,7 +179,7 @@ target_compile_definitions(CAFFeinated PRIVATE
 
 target_link_libraries(CAFFeinated PRIVATE glfw3 nfd zlibstatic squish)
 
-if(WIN32)
+if(MSVC)
    target_link_options(CAFFeinated PRIVATE /FORCE:MULTIPLE /IGNORE:4006)
 
 endif()
