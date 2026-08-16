@@ -99,6 +99,11 @@ else()
      target_include_directories(nfd PUBLIC "${TP}/nativefiledialog/src/include")
 endif()
 
+if(WIN32 AND MINGW)
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -static-libgcc -static-libstdc++")
+endif()
+
 file(GLOB ZLIB_SOURCES CONFIGURE_DEPENDS "${TP}/zlib/*.c")
 add_library(zlibstatic STATIC ${ZLIB_SOURCES})
 target_include_directories(zlibstatic PUBLIC "${TP}/zlib")
