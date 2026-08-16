@@ -99,7 +99,7 @@ else()
      target_include_directories(nfd PUBLIC "${TP}/nativefiledialog/src/include")
 endif()
 
-if(WIN32 AND MINGW)
+if(MINGW)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -static-libgcc -static-libstdc++")
 endif()
@@ -191,9 +191,14 @@ endif()
 
 
 
-if(NOT MSVC AND MINGW)
+if(NOT MSVC)
+ if(MINGW)
+    set(_GLFW_X11 1)
+    target_link_libraries(CAFFeinated PRIVATE -static GL X11 Xi Xrandr Xinerama Xcursor rt m dl safec  pthread dl)
+  else()
     set(_GLFW_X11 1)
     target_link_libraries(CAFFeinated PRIVATE GL X11 Xi Xrandr Xinerama Xcursor rt m dl safec  pthread dl)
+  endif()
 endif()
 
 set_target_properties(CAFFeinated PROPERTIES
