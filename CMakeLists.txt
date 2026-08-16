@@ -144,7 +144,7 @@ set(RES_ASSETS ${RES_IMAGES} ${RES_FONTS} "${RES}/exeIcon.ico")
 set_source_files_properties(${RES_ASSETS} PROPERTIES HEADER_FILE_ONLY TRUE)
 
 
-if(WIN32)
+if(MSVC)
  set_target_properties(glfw3 nfd zlibstatic squish PROPERTIES FOLDER "thirdparty")
  add_executable(CAFFeinated
 	 ${APP_SOURCES}
