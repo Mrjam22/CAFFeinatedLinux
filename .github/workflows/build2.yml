@@ -32,7 +32,7 @@ jobs:
       - name: Build
         run: dir
       - name: Build
-        run: cd bin
+        run: cd build
       - name: Build
         run: dir
 
@@ -40,13 +40,13 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: CAFFeinated
-          path: /bin/CAFFeinated.exe
+          path: /build/bin/CAFFeinated.exe
           if-no-files-found: error
 
       - name: Publish release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: /bin/CAFFeinated.exe
+          files: /build/bin/CAFFeinated.exe
           fail_on_unmatched_files: true
           generate_release_notes: true
