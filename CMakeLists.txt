@@ -191,7 +191,7 @@ endif()
 
 
 
-if(NOT MSVC)
+if(NOT MSVC AND MINGW)
     set(_GLFW_X11 1)
     target_link_libraries(CAFFeinated PRIVATE GL X11 Xi Xrandr Xinerama Xcursor rt m dl safec  pthread dl)
 endif()
