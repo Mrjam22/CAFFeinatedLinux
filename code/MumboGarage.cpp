@@ -771,7 +771,7 @@ static void ShowMenuFile()
 		nfdchar_t* saveFile = new char[MAX_PATH];
 
 		nfdchar_t filename[256];
-		char* end = strrchr(currentFileName, '\\');
+		char* end = strrchr(currentFileName,'/');
 		int32_t strLen = strlen(currentFileName);
 		int32_t remainLeft = strLen - (end - currentFileName);
 
@@ -861,7 +861,7 @@ void exportFilesFromBundleRaw() {
 
 				//All (properly named) texture files end with "\default.rtx". Filter that out as well.
 				if (strcmp(type, "texture") == 0) {
-					strtok(lbl, "\\");
+					strtok(lbl, "/");
 				}
 
 				char* buf = (char*)malloc(1024);
@@ -928,26 +928,26 @@ void exportFilesFromBundleRaw() {
 						tokCount -= strlen("XENONBETA_v1\\");
 					}
 
-					char* tok = strtok(charBuffer, "\\");
+					char* tok = strtok(charBuffer,"/");
 
 					int32_t curLen = 0;
 					while (curLen < tokCount - strlen(lbl)) {
-						strcat(buf, "\\");
+						strcat(buf,"/");
 						strcat(buf, tok);
 						std::filesystem::create_directory(buf);
 
 						PRINT("%s\n", tok);
 
-						tok = strtok(NULL, "\\");
+						tok = strtok(NULL,"/");
 
 						PRINT("%d - %d\n", curLen, tokCount);
-						curLen += strcspn(bundleFile.V31Bundle->fileInfoTable.debugTable.fileNames[i] + 0x1A + curLen, "\\") + 1;
+						curLen += strcspn(bundleFile.V31Bundle->fileInfoTable.debugTable.fileNames[i] + 0x1A + curLen,"/") + 1;
 					}
 
 					free(charBuffer);
 				}
 
-				strcat(buf, "\\");
+				strcat(buf,"/");
 				strcat(buf, lbl);
 
 				FILE* writeFile = fopen(buf, "wb");
@@ -1024,7 +1024,7 @@ void exportFilesFromBundleSpecial() {
 
 				// All (properly named) texture files end with "\default.rtx". Filter that out as well.
 				if (strcmp(type, "texture") == 0) {
-					strtok(lbl, "\\");
+					strtok(lbl,"/");
 				}
 
 				char* buf = (char*)malloc(1024);
@@ -1479,7 +1479,7 @@ void displayActiveFileProperty() {
 		}
 
 		if (strchr(lbl, '\\') != NULL) {
-			strtok(lbl, "\\");
+			strtok(lbl,"/");
 		}
 
 		float pos = ImGui::GetCursorPosY();
@@ -1558,7 +1558,7 @@ void displayActiveFileProperty() {
 				assetGetTypeFromString(lbl + 4, type);
 
 				if (strcmp(type, "texture") == 0) {
-					strtok(lbl, "\\");
+					strtok(lbl,"/");
 				}
 
 				strcat(file, lbl);
@@ -2038,7 +2038,7 @@ void displayActiveBundleV31Property() {
 									strcat(nameBuffer, tok);
 									std::filesystem::create_directory(nameBuffer);
 
-									strcat(nameBuffer, "\\");
+									strcat(nameBuffer,"/");
 									tok = strtok(NULL, "_");
 								}
 
@@ -3156,7 +3156,7 @@ void fillBundleFileList() {
 
 		//All (properly named) texture files end with "\default.rtx". Filter that out as well.
 		if (strcmp(type, "texture") == 0) {
-			strtok(lbl, "\\");
+			strtok(lbl,"/");
 		}
 
 		GLuint img = 0;
@@ -3426,7 +3426,7 @@ void fillStreamBundleFileList() {
 
 			//All (properly named) texture files end with "\default.rtx". Filter that out as well.
 			if (strcmp(type, "texture") == 0) {
-				strtok(lbl, "\\");
+				strtok(lbl,"/");
 			}
 
 			if (ImGui::Button(lbl)) {
@@ -3512,7 +3512,7 @@ void fillStreamBundleFileListOfBundle() {
 
 		//All (properly named) texture files end with "\default.rtx". Filter that out as well.
 		if (strcmp(type, "texture") == 0) {
-			strtok(lbl, "\\");
+			strtok(lbl,"/");
 		}
 
 		GLuint img = 0;
@@ -3675,7 +3675,7 @@ void fillGhouliesBundleFileList() {
 
 		//All (properly named) texture files end with "\default.rtx". Filter that out as well.
 		if (strcmp(type, "texture") == 0) {
-			strtok(lbl, "\\");
+			strtok(lbl,"/");
 		}
 
 		if (ImGui::Selectable(lbl, fileIdx == i + 1)) {
