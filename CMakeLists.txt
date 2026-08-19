@@ -201,6 +201,17 @@ if(MSVC)
 	 ${RES_ASSETS}
 	 "${TP}/glad/src/glad.c"
 	 MumboGarage.rc)
+elseif(APPLE)
+  set_target_properties(glfw3 nfd zlibstatic squish PROPERTIES FOLDER "thirdparty")
+  add_executable(CAFFeinated MACOSX_BUNDLE
+	 ${APP_SOURCES}
+	 ${APP_HEADERS}
+	 ${IMGUI_SOURCES}
+	 ${IMGUI_HEADERS}
+	 ${STB_HEADERS}
+	 ${RES_ASSETS}
+	 "${TP}/glad/src/glad.c")
+
 else()
   set_target_properties(glfw3 nfd zlibstatic squish PROPERTIES FOLDER "thirdparty")
   add_executable(CAFFeinated
@@ -213,7 +224,16 @@ else()
 	 "${TP}/glad/src/glad.c")
 endif()
 
+if(APPLE)
 
+ set_target_properties(MyMacApp PROPERTIES
+     MACOSX_BUNDLE_BUNDLE_NAME "CAFFeinated"
+     MACOSX_BUNDLE_GUI_IDENTIFIER "com.github.OlieGamerTV.CAFFeinated"
+     MACOSX_BUNDLE_BUNDLE_VERSION "0.2.1"
+     MACOSX_BUNDLE_SHORT_VERSION_STRING "0.2"
+ )
+
+endif()
 
 target_include_directories(CAFFeinated PRIVATE
 	"${CMAKE_CURRENT_SOURCE_DIR}"
