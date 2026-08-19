@@ -226,7 +226,7 @@ endif()
 
 if(APPLE)
 
- set_target_properties(MyMacApp PROPERTIES
+ set_target_properties(CAFFeinated PROPERTIES
      MACOSX_BUNDLE_BUNDLE_NAME "CAFFeinated"
      MACOSX_BUNDLE_GUI_IDENTIFIER "com.github.OlieGamerTV.CAFFeinated"
      MACOSX_BUNDLE_BUNDLE_VERSION "0.2.1"
