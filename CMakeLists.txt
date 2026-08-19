@@ -12,12 +12,13 @@ set(CMAKE_INTERMEDIATE_DIR_STRATEGY "SHORT" CACHE STRING "")
 project(CAFFeinated LANGUAGES C CXX)
 
 if(NOT MSVC)
-    add_compile_options(-Wall -Wextra)
+    add_compile_options(-Wall -Wextra -fshort-wchar)
 endif()
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_C_STANDARD 11)
+
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
@@ -198,7 +199,7 @@ if(NOT MSVC)
     target_link_libraries(CAFFeinated PRIVATE -static pthread dl)
   else()
     set(_GLFW_X11 1)
-    target_link_libraries(CAFFeinated PRIVATE GL X11 Xi Xrandr Xinerama Xcursor rt m dl safec  pthread dl)
+    target_link_libraries(CAFFeinated PRIVATE -fshort-wchar GL X11 Xi Xrandr Xinerama Xcursor rt m dl safec  pthread dl)
   endif()
 endif()
 

@@ -19,11 +19,26 @@
 #include "VehicleWindow.h"
 #endif
 
+
+
+
+#ifdef _WIN32
+typedef char32_t platform_wchar_t;
+#define PLATFORM_TEXT(str) U##str
+#else
+typedef wchar_t platform_wchar_t;
+#define PLATFORM_TEXT(str) L##str
+#endif
+
+
+
+
 VehicleWindowParams markerWindowParameters;
 
 /// <summary>
 /// Handles the functionality of the Vehicle Editor window.
 /// </summary>
+
 void DisplayVehicleEditorBaseWindow() {
 	bool openNewPartPopup = false;
 	bool generateHeaderPopup = false;
@@ -674,7 +689,7 @@ void SetupVehicleEditorWindow(bool canSave, char* fileName) {
 
 Vehicle* GetVehicleWindowVehiclePtr() {
 	return markerWindowParameters
-		.activeVehicle;
+	.activeVehicle;
 }
 
 void FreeVehicleWindowVehicleMemory() {

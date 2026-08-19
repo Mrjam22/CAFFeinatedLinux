@@ -1,5 +1,22 @@
 #pragma once
 
+
+
+
+
+#ifdef _WIN32
+typedef char32_t platform_wchar_t;
+#define PLATFORM_TEXT(str) U##str
+#else
+typedef wchar_t platform_wchar_t;
+#define PLATFORM_TEXT(str) L##str
+#endif
+
+
+
+
+
+
 //Ghoulies Stuff
 static void openGhouliesDemand();
 static void openGhouliesBundle();
@@ -36,16 +53,16 @@ void displayActiveRPKFileProperty();
 
 //Image Functions
 
-static GLuint LoadResourceImage(int resourceName, const wchar_t* resourceType);
+static GLuint LoadResourceImage(int resourceName, const platform_wchar_t* resourceType);
 static GLuint LoadImageFromData_Base(char* data, int width, int height, int type);
 static GLuint LoadImageFromData_Pinata(char* data, int width, int height, int type);
 static GLuint LoadImageFromData_Banjo(char* data, int width, int height, int type, int isSwizzled);
 static GLuint LoadImageFromData(unsigned char* data, int width, int height, int format, int type);
-static GLFWimage LoadResourceImageToGLFWImage(int resourceName, const wchar_t* resourceType);
+static GLFWimage LoadResourceImageToGLFWImage(int resourceName, const platform_wchar_t* resourceType);
 static unsigned char* GetRawImageData_Base(char* data, int width, int height, int type);
 static unsigned char* GetRawImageData_Banjo(char* data, int width, int height, int type, int isSwizzled);
 
-static ImFont* LoadResourceFont(int resourceName, const wchar_t* resourceType, float extraSize);
+static ImFont* LoadResourceFont(int resourceName, const platform_wchar_t* resourceType, float extraSize);
 
 int mainWindowCode();
 void readOtherSupportedFile(int type);

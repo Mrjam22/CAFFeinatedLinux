@@ -123,6 +123,20 @@
 #include "LoadingProcess.h"
 
 
+
+
+
+#ifdef _WIN32
+typedef char32_t platform_wchar_t;
+#define PLATFORM_TEXT(str) U##str
+#else
+typedef wchar_t platform_wchar_t;
+#define PLATFORM_TEXT(str) L##str
+#endif
+
+
+
+
 // Permanent reference to the window so it can be fetched from anywhere.
 GLFWwindow* window;
 
@@ -229,12 +243,12 @@ int mainWindowCode() {
 	// Setup our icons for the window.
 	GLFWimage images[2];
 
-	#ifdef _WIN32
-	images[0] = LoadResourceImageToGLFWImage(IDB_PNG8, L"PNG"); // Small Icon
-	images[1] = LoadResourceImageToGLFWImage(IDB_PNG9, L"PNG"); // Large Icon
+	#ifdef _MSVC
+	images[0] = LoadResourceImageToGLFWImage(IDB_PNG8, u"PNG"); // Small Icon
+	images[1] = LoadResourceImageToGLFWImage(IDB_PNG9, u"PNG"); // Large Icon
     #endif
 
-	#ifndef _WIN32
+	#ifndef _MSVC
 
 
 	int width, height, channels;
@@ -291,14 +305,14 @@ int mainWindowCode() {
 	ImGui_ImplOpenGL3_Init();
 
 	// Preload all our icon PNGs so we can use them whenever.
-	//RC_PNG_ANIMICON = LoadResourceImage(IDB_PNG1, L"PNG");
-	//RC_PNG2 = LoadResourceImage(IDB_PNG2, L"PNG");
-	//RC_PNG_VEHICON = LoadResourceImage(IDB_PNG3, L"PNG");
-//	RC_PNG_VEHBLOCKICON = LoadResourceImage(IDB_PNG4, L"PNG");
-//	RC_PNG_AUDIOICON = LoadResourceImage(IDB_PNG5, L"PNG");
-//	RC_PNG_LISTICON = LoadResourceImage(IDB_PNG6, L"PNG");
-//	RC_PNG_CHALICON = LoadResourceImage(IDB_PNG7, L"PNG");
-//	RC_PNG_HAVOKICON = LoadResourceImage(IDB_PNG10, L"PNG");
+	//RC_PNG_ANIMICON = LoadResourceImage(IDB_PNG1, u"PNG");
+	//RC_PNG2 = LoadResourceImage(IDB_PNG2, u"PNG");
+	//RC_PNG_VEHICON = LoadResourceImage(IDB_PNG3, u"PNG");
+//	RC_PNG_VEHBLOCKICON = LoadResourceImage(IDB_PNG4, u"PNG");
+//	RC_PNG_AUDIOICON = LoadResourceImage(IDB_PNG5, u"PNG");
+//	RC_PNG_LISTICON = LoadResourceImage(IDB_PNG6, u"PNG");
+//	RC_PNG_CHALICON = LoadResourceImage(IDB_PNG7, u"PNG");
+//	RC_PNG_HAVOKICON = LoadResourceImage(IDB_PNG10, u"PNG");
 
 	//LoadResourceFont(IDR_FONT1, RT_FONT, 1.25f); // Japanese Font (NotoSansJP)
 //	LoadResourceFont(IDR_FONT2, RT_FONT, 1.25f); // Korean Font (NotoSansKR)
@@ -4682,7 +4696,7 @@ static void openLoadSaveFile() {
 /// <param name="resourceType">The type of the resource.</param>
 /// <param name="extraScale">Optional. Extra scaling to apply to the font if needed.</param>
 /// <returns>A pointer to the created ImFont object.</returns>
-static ImFont* LoadResourceFont(int resourceName, const wchar_t* resourceType, float extraScale = 1) {
+static ImFont* LoadResourceFont(int resourceName, const platform_wchar_t* resourceType, float extraScale = 1) {
 	// HRESULT hr = S_OK;
  //
 	// // Resource management.
@@ -5120,7 +5134,7 @@ static GLuint LoadImageFromData(unsigned char* data, int width, int height,int f
 /// <param name="resourceName"></param>
 /// <param name="resourceType"></param>
 /// <returns>If successful, the target of the texture.</returns>
-static GLuint LoadResourceImage(int resourceName, const wchar_t* resourceType) {
+static GLuint LoadResourceImage(int resourceName, const platform_wchar_t* resourceType) {
 	// HRESULT hr = S_OK;
  //
 	// // Resource management.
@@ -5182,7 +5196,7 @@ static GLuint LoadResourceImage(int resourceName, const wchar_t* resourceType) {
 
 
 #ifdef _WIN32
-static GLFWimage LoadResourceImageToGLFWImage(int resourceName, const wchar_t* resourceType) {
+static GLFWimage LoadResourceImageToGLFWImage(int resourceName, const platform_wchar_t* resourceType) {
 	HRESULT hr = S_OK;
 
 	// Resource management.

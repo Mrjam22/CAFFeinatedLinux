@@ -77,7 +77,7 @@ struct LabelStrInfoEntry {
 };
 
 struct LabelStrEntry {
-	wchar_t string[2048];
+	platform_wchar_t string[2048];
 };
 
 struct LabelStrTable {
@@ -349,7 +349,7 @@ public:
 
 	// A buffer of 0x40 bytes is reserved for this.
 	// A total of 32 characters will be in this.
-	wchar_t vehicleUnicodeName[0x20];
+	platform_wchar_t vehicleUnicodeName[0x20];
 
 	unsigned int aButtonAssignment = 0; // 0x60
 	unsigned int bButtonAssignment = 0; // 0x64

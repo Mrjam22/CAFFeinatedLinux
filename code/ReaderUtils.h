@@ -8,6 +8,20 @@
 #endif
 
 
+
+
+#ifdef _WIN32
+typedef char32_t platform_wchar_t;
+#define PLATFORM_TEXT(str) U##str
+#else
+typedef wchar_t platform_wchar_t;
+#define PLATFORM_TEXT(str) L##str
+#endif
+
+
+
+
+
 const int SRC_ENDIANLITTLE = 0;
 const int SRC_ENDIANBIG = 1;
 
@@ -234,7 +248,7 @@ static unsigned int checksum32(char* data, size_t length) {
 /// <param name="ws">- The wide character array.</param>
 /// <param name="size">- The size of the character array.</param>
 /// <returns>The character array equivalent of the supplied wide character array.</returns>
-static char* compileWSToS(wchar_t* ws, size_t size) {
+static char* compileWSToS(platform_wchar_t* ws, size_t size) {
 	char* buf = (char*)malloc(size);
 	memset(buf, 0, size);
 
@@ -251,12 +265,12 @@ static char* compileWSToS(wchar_t* ws, size_t size) {
 /// <param name="s">- the regular character array.</param>
 /// <param name="size">- The size of the character array.</param>
 /// <returns>The wide character array equivalent of the supplied character array.</returns>
-static wchar_t* compileSToWS(char* s, size_t size) {
-	wchar_t* buf = (wchar_t*)malloc(size);
+static platform_wchar_t* compileSToWS(char* s, size_t size) {
+	platform_wchar_t* buf = (platform_wchar_t*)malloc(size);
 	memset(buf, 0, size);
 
 	for (int i = 0; i < size / 2; i++) {
-		buf[i] = (wchar_t)(s[i]);
+		buf[i] = (platform_wchar_t)(s[i]);
 	}
 
 	return buf;
@@ -390,6 +404,6 @@ static unsigned short flipEndian(unsigned short val) {
 /// </summary>
 /// <param name="val"></param>
 /// <returns><paramref name="val"/>, opposite of the current endian.</returns>
-static wchar_t flipEndian(wchar_t val) {
+static platform_wchar_t flipEndian(platform_wchar_t val) {
 	return ((0xFF00 & val) >> 8) | ((0x00FF & val) << 8);
 }
