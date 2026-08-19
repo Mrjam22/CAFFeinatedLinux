@@ -131,6 +131,7 @@ else()
      add_library(nfd STATIC "${TP}/nativefiledialog/src/nfd_cocoa.m")
 	 find_package(PkgConfig REQUIRED)
      target_include_directories(nfd PUBLIC "${TP}/nativefiledialog/src/include")
+     set(CMAKE_OSX_DEPLOYMENT_TARGET "13.0" CACHE STRING "Minimum macOS deployment target")
 
 
 endif()
