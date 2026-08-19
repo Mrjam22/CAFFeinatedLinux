@@ -12,7 +12,7 @@ permissions:
 jobs:
   build:
     # 1. Changed runner from windows-latest to macos-latest (Apple Silicon)
-    runs-on: macos-14-large
+    runs-on: macos-14
 
     steps:
 
@@ -39,7 +39,8 @@ jobs:
 
       # 4. Consolidated the multi-step build/dir debugging block into clean steps
       - name: Build
-        run: cmake --build build --config Release
+        run: cmake --build build --config Release -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 -DCMAKE_OSX_ARCHITECTURES="x86_64"
+
 
       - name: Debug Output Directory
         run: |
