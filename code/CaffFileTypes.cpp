@@ -15,19 +15,6 @@
 #endif
 
 
-
-
-
-#ifdef _WIN32
-typedef char32_t platform_wchar_t;
-#define PLATFORM_TEXT(str) U##str
-#else
-typedef wchar_t platform_wchar_t;
-#define PLATFORM_TEXT(str) L##str
-#endif
-
-
-
 #include "CaffFileTypes.h"
 
 #pragma region Script
@@ -404,11 +391,11 @@ void Loctext::ReadLabelData() {
 	for (int i = 0; i < labelTable.stringTable.header.totalCount; i++) {
 		int offs = strEntryBaseOffset + (labelTable.stringTable.infoEntries[i].offset * 2);
 
-		platform_wchar_t chr = 0xFFFF;
+		wchar_t chr = 0xFFFF;
 		int idx = 0;
 		if (endianness == SRC_ENDIANLITTLE) {
 			while (chr != '\0') {
-				memcpy(&chr, loctextPtr + offs, sizeof(platform_wchar_t));
+				memcpy(&chr, loctextPtr + offs, sizeof(wchar_t));
 				labelTable.stringTable.strings[i].string[idx] = chr;
 				idx++;
 				offs += 2;
@@ -416,7 +403,7 @@ void Loctext::ReadLabelData() {
 		}
 		else if (endianness == SRC_ENDIANBIG) {
 			while (chr != '\0') {
-				memcpy(&chr, loctextPtr + offs, sizeof(platform_wchar_t));
+				memcpy(&chr, loctextPtr + offs, sizeof(wchar_t));
 				labelTable.stringTable.strings[i].string[idx] = flipEndian(chr);
 				idx++;
 				offs += 2;
@@ -918,7 +905,7 @@ void Loctext::WriteLoctext(char* filename) {
 			}
 			else {
 				for (int c = 0; c < wcslen(labelTable.stringTable.strings[i].string) + 1; c++) {
-					platform_wchar_t val = flipEndian(labelTable.stringTable.strings[i].string[c]);
+					wchar_t val = flipEndian(labelTable.stringTable.strings[i].string[c]);
 					fwrite(&val, 2, 1, writeStrm);
 				}
 			}
@@ -1208,11 +1195,11 @@ void LocTwo::ReadLabelData() {
 	for (int i = 0; i < labelTable.stringTable.header.totalCount; i++) {
 		int offs = strEntryBaseOffset + (labelTable.stringTable.infoEntries[i].offset * 2);
 
-		platform_wchar_t chr = 0xFFFF;
+		wchar_t chr = 0xFFFF;
 		int idx = 0;
 		if (endiannes == SRC_ENDIANLITTLE) {
 			while (chr != '\0') {
-				memcpy(&chr, loctextPtr + offs, sizeof(platform_wchar_t));
+				memcpy(&chr, loctextPtr + offs, sizeof(wchar_t));
 				labelTable.stringTable.strings[i].string[idx] = chr;
 				idx++;
 				offs += 2;
@@ -1220,7 +1207,7 @@ void LocTwo::ReadLabelData() {
 		}
 		else if (endiannes == SRC_ENDIANBIG) {
 			while (chr != '\0') {
-				memcpy(&chr, loctextPtr + offs, sizeof(platform_wchar_t));
+				memcpy(&chr, loctextPtr + offs, sizeof(wchar_t));
 				labelTable.stringTable.strings[i].string[idx] = flipEndian(chr);
 				idx++;
 				offs += 2;
@@ -1497,10 +1484,10 @@ void Vehicle::WriteHeaderFile(char* fileName) {
 
 	sprintf(filename, "0x000000FF"); // for the header file.
 
-	platform_wchar_t vehicleName[0x100];
+	wchar_t vehicleName[0x100];
 	memset(vehicleName, 0, 0x100);
 
-	// If the name type is 1, we need to save the data as platform_wchar_t. Otherwise just write it as a char string.
+	// If the name type is 1, we need to save the data as wchar_t. Otherwise just write it as a char string.
 	if (nameType == 1) {
 		swprintf(vehicleName, 0x100, L"VEHICLE: %ls", vehicleUnicodeName);
 	}
@@ -1518,8 +1505,8 @@ void Vehicle::WriteHeaderFile(char* fileName) {
 	fwrite(&unk2, sizeof(int), 1, writeHeadStrm);
 
 	for (int i = 0; i < 0x80; i++) {
-		platform_wchar_t flippedChar = flipEndian(vehicleName[i]);
-		fwrite(&flippedChar, sizeof(platform_wchar_t), 1, writeHeadStrm);
+		wchar_t flippedChar = flipEndian(vehicleName[i]);
+		fwrite(&flippedChar, sizeof(wchar_t), 1, writeHeadStrm);
 	}
 
 	fwrite(&filename, sizeof(char), 0x38, writeHeadStrm);
@@ -1556,11 +1543,11 @@ char* Vehicle::WriteToArray() {
 	memcpy(buf + 0x18, &unk2Val, sizeof(int));
 	memcpy(buf + 0x1C, &unk3Val, sizeof(int));
 
-	// If the name type is 1, we need to save the data as platform_wchar_t. Otherwise just write it as a char string.
+	// If the name type is 1, we need to save the data as wchar_t. Otherwise just write it as a char string.
 	if (nameType == 1) {
 		for (int i = 0; i < 0x20; i++) {
-			platform_wchar_t flippedChar = flipEndian(vehicleUnicodeName[i]);
-			memcpy(buf + 0x20 + (i * 2), &flippedChar, sizeof(platform_wchar_t));
+			wchar_t flippedChar = flipEndian(vehicleUnicodeName[i]);
+			memcpy(buf + 0x20 + (i * 2), &flippedChar, sizeof(wchar_t));
 		}
 	}
 	else if (nameType == 0) {
@@ -1648,11 +1635,11 @@ void Vehicle::WriteToFile(char* fileName, bool isSave) {
 	fwrite(&unk2Val, sizeof(int), 1, writeStrm);
 	fwrite(&unk3Val, sizeof(int), 1, writeStrm);
 
-	// If the name type is 1, we need to save the data as platform_wchar_t. Otherwise just write it as a char string.
+	// If the name type is 1, we need to save the data as wchar_t. Otherwise just write it as a char string.
 	if (nameType == 1) {
 		for (int i = 0; i < 0x20; i++) {
-			platform_wchar_t flippedChar = flipEndian(vehicleUnicodeName[i]);
-			fwrite(&flippedChar, sizeof(platform_wchar_t), 1, writeStrm);
+			wchar_t flippedChar = flipEndian(vehicleUnicodeName[i]);
+			fwrite(&flippedChar, sizeof(wchar_t), 1, writeStrm);
 		}
 	}
 	else if (nameType == 0) {
@@ -1780,18 +1767,18 @@ void Vehicle::ReadVehicle(char* data, bool isFromSave) {
 		// We need to flip the endianness of every applicable character.
 		if (nameType == 1) {
 			int namePos = pos + 0x20;
-			platform_wchar_t newChar = L'\n';
+			wchar_t newChar = L'\n';
 			for (int i = 0, c = 0; i < 0x40; i += 2, c++) {
-				memcpy_s(&newChar, sizeof(platform_wchar_t), vehiclePtr + namePos + i, sizeof(platform_wchar_t));
+				memcpy_s(&newChar, sizeof(wchar_t), vehiclePtr + namePos + i, sizeof(wchar_t));
 				newChar = flipEndian(newChar);
 
 				if (newChar == 0) break;
 
 				vehicleUnicodeName[c] = newChar;
-				//memcpy(&vehicleSaveName + i, &newChar, sizeof(platform_wchar_t));
+				//memcpy(&vehicleSaveName + i, &newChar, sizeof(wchar_t));
 				printf("%d -> %lc\n", i, newChar);
 			}
-			//wprintf(u"Vehicle Name %s\n", vehicleUnicodeName);
+			wprintf(L"Vehicle Name %s\n", vehicleUnicodeName);
 			//memcpy(vehicleName, vehiclePtr + pos + 0x20, 0x40);
 		}
 
