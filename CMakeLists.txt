@@ -12,7 +12,7 @@ set(CMAKE_INTERMEDIATE_DIR_STRATEGY "SHORT" CACHE STRING "")
 project(CAFFeinated LANGUAGES C CXX)
 
 if(NOT MSVC)
-    add_compile_options(-Wall -Wextra -fshort-wchar)
+    add_compile_options(-Wall -Wextra  -w)
 endif()
 
 set(CMAKE_CXX_STANDARD 17)
@@ -199,7 +199,7 @@ if(NOT MSVC)
     target_link_libraries(CAFFeinated PRIVATE -static pthread dl)
   else()
     set(_GLFW_X11 1)
-    target_link_libraries(CAFFeinated PRIVATE -fshort-wchar GL X11 Xi Xrandr Xinerama Xcursor rt m dl safec  pthread dl)
+    target_link_libraries(CAFFeinated PRIVATE GL X11 Xi Xrandr Xinerama Xcursor rt m dl safec  pthread dl)
   endif()
 endif()
 

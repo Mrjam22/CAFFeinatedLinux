@@ -6,6 +6,8 @@
 #include <nfd.h>
 #include <thread>
 
+
+
 #ifndef _WIN32
 #include <safeclib/safe_mem_lib.h>
 #include <safeclib/safe_str_lib.h>
@@ -13,6 +15,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <cstring>
+#define MAX_PATH 260
 #endif
 
 #include "LoctextWindow.h"

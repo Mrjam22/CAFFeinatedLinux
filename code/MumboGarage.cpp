@@ -195,7 +195,7 @@ int32_t main() {
 /// <returns></returns>
 int32_t mainWindowCode() {
 	glfwInit();
-
+	printf("Size of wchar_t: %zu bytes\n", sizeof(wchar_t));
 	// Establish all our window hints.
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -5147,7 +5147,7 @@ static GLuint LoadImageFromData(unsigned char* data, int32_t width, int32_t heig
 /// <param name="resourceName"></param>
 /// <param name="resourceType"></param>
 /// <returns>If successful, the target of the texture.</returns>
-<<<<<<< HEAD
+
 static GLuint LoadResourceImage(int resourceName, const wchar_t* resourceType) {
 	// HRESULT hr = S_OK;
  //
