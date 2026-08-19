@@ -12,7 +12,16 @@ permissions:
 jobs:
   build:
     # 1. Changed runner from windows-latest to macos-latest (Apple Silicon)
-    runs-on: macos-26-intel
+    runs-on: macos-14
+
+    steps:
+    - name: Checkout Source Code
+      uses: actions/checkout@v4
+
+    - name: Select Xcode 14.3.1 for macOS 11 Compatibility
+      run: |
+    sudo xcode-select -s /Applications/Xcode_14.3.1.app/Contents/Developer
+        xcodebuild -version
 
     steps:
       - name: Checkout
