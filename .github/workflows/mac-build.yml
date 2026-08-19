@@ -1,0 +1,58 @@
+name: mac-build
+
+on:
+  push:
+    branches: ["master", "linux"]
+  pull_request:
+    branches: ["master", "linux"]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    # 1. Changed runner from windows-latest to macos-latest (Apple Silicon)
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      # 2. Replaced bwoodsend/setup-winlibs-action with systemic GCC/Clang on macOS
+      - name: Set up Build Environment
+        run: |
+          echo "CC=gcc" >> $GITHUB_ENV
+          echo "CXX=g++" >> $GITHUB_ENV
+
+      # 3. Changed CMake generator from "MinGW Makefiles" to standard "Unix Makefiles"
+      - name: Configure
+        run: cmake -G "Unix Makefiles" -B build -DCMAKE_BUILD_TYPE=Release
+
+      # 4. Consolidated the multi-step build/dir debugging block into clean steps
+      - name: Build
+        run: cmake --build build --config Release
+
+      - name: Debug Output Directory
+        run: |
+          ls -la
+          ls -la build/
+          # Tip: If your binary goes to a subfolder like 'bin', you can verify it here:
+          # ls -la build/bin/
+
+      # 5. Fixed Windows hardcoded absolute paths (D:/a/...) and the .exe extension
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: CAFFeinated-macOS
+          path: build/bin/CAFFeinated # No .exe extension on macOS
+          if-no-files-found: error
+
+      - name: Publish release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/bin/CAFFeinated
+          fail_on_unmatched_files: true
+          generate_release_notes: true
