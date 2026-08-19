@@ -11,11 +11,6 @@ set(CMAKE_INTERMEDIATE_DIR_STRATEGY "SHORT" CACHE STRING "")
 
 project(CAFFeinated LANGUAGES C CXX)
 
-
-if(MINGW)
-    set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> --input-format=rc -O coff <DEFINES> <INCLUDES> -i <SOURCE> -o <OBJECT>")
-endif()
-
 if(NOT MSVC)
     add_compile_options(-Wall -Wextra)
 endif()
@@ -155,7 +150,7 @@ set(RES_ASSETS ${RES_IMAGES} ${RES_FONTS} "${RES}/exeIcon.ico")
 set_source_files_properties(${RES_ASSETS} PROPERTIES HEADER_FILE_ONLY TRUE)
 
 
-if(WIN32)
+if(MSVC)
  set_target_properties(glfw3 nfd zlibstatic squish PROPERTIES FOLDER "thirdparty")
  add_executable(CAFFeinated
 	 ${APP_SOURCES}
