@@ -125,6 +125,9 @@ else()
 	 "${TP}/glfw/src/cocoa_joystick.m"
 	 "${TP}/glfw/src/cocoa_monitor.m"
 	 "${TP}/glfw/src/cocoa_window.m"
+	 "${TP}/glfw/src/cocoa_time.c"
+	 "${TP}/glfw/src/posix_thread.c"
+	 "${TP}/glfw/src/posix_module.c"
 	 "${TP}/glfw/src/nsgl_context.m")
      target_include_directories(glfw3 PUBLIC "${TP}/glfw/include")
      target_compile_definitions(glfw3 PRIVATE _GLFW_COCOA)
