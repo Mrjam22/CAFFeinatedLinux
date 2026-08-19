@@ -45,18 +45,21 @@ jobs:
           ls -la build/
           # Tip: If your binary goes to a subfolder like 'bin', you can verify it here:
           # ls -la build/bin/
+    - name: Compress and Upload .app Bundle
+      run: ditto -c -k --sequesterRsrc build/bin/CAFFeinated.app  build/bin/CAFFeinated-Mac.zip
+
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: CAFFeinated-macOS
-          path: build/bin/CAFFeinated.app
+          path: build/bin/CAFFeinated-Mac.zip
           if-no-files-found: error
 
       - name: Publish release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: build/bin/CAFFeinated.app
+          files: build/bin/CAFFeinated-Mac.zip
           fail_on_unmatched_files: true
           generate_release_notes: true
