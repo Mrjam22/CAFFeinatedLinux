@@ -46,15 +46,11 @@ jobs:
           # Tip: If your binary goes to a subfolder like 'bin', you can verify it here:
           # ls -la build/bin/
 
-      - name: Compress and Upload .app Bundle
-        run: ditto -c -k --sequesterRsrc build/bin/ build/bin/CAFFeinated-Mac.zip
-
-
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: CAFFeinated-macOS
-          path: build/bin/CAFFeinated-Mac.zip
+          path: build/bin/
           if-no-files-found: error
 
       - name: Publish release
