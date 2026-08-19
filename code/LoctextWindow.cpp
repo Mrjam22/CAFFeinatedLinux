@@ -6,6 +6,16 @@
 #include <nfd.h>
 #include <thread>
 
+
+
+#ifndef _WIN32
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <cstring>
+#define MAX_PATH 260
+#endif
+
 #include "LoctextWindow.h"
 
 #include "LoadingProcess.h"
@@ -326,7 +336,7 @@ void readExternalLoctextFile(char* data) {
 void AssignLoctextFilename(char* filename) {
 	printf("%s\n", filename);
 	memset(loctextWindowParameters.originalFilename, 0, 128);
-	strcpy_s(loctextWindowParameters.originalFilename, 128, filename);
+	strcpy(loctextWindowParameters.originalFilename, filename);
 	loctextWindowParameters.hasAssignedFileName = true;
 	printf("%s\n", loctextWindowParameters.originalFilename);
 }

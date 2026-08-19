@@ -2,6 +2,13 @@
 #include "CommonReader.h"
 #include "DarkPackage.h"
 
+#ifndef _WIN32
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <cstring>
+#endif
+
 void DarkPackageFile::ReadPackageFile(char* data, char byteswap) {
 	if (data == nullptr) {
 		return;
@@ -15,18 +22,18 @@ void DarkPackageFile::ReadPackageFile(char* data, char byteswap) {
 }
 
 void DarkPackageHeader::ReadPackageHeader(char* data, char byteswap) {
-	memcpy_s(headerString, 0x20, data, 0x20);
+	memcpy(headerString, data, 0x20);
 
 	int numOfFilesVar = 0;
 
 	if (byteswap == 1) {
-		memcpy_s(&numOfFilesVar, 4, data + 0x20, 4);
+		memcpy(&numOfFilesVar, data + 0x20, 4);
 
 		numOfFiles = flipEndian(numOfFilesVar);
 	}
 
 	if (byteswap == 0) {
-		memcpy_s(&numOfFiles, 4, data + 0x20, 4);
+		memcpy(&numOfFiles, data + 0x20, 4);
 	}
 }
 
@@ -47,14 +54,14 @@ void DarkPackageFileTable::ReadPackageFileTable(char* data, int fileCount, char 
 
 	for (int i = 0; i < fileCount; i++) {
 		if (byteswap == 1) {
-			memcpy_s(&nameOffsetVar, 4, data + offset, 4);
-			memcpy_s(&dataOffsetVar, 4, data + offset + 0x4, 4);
-			memcpy_s(&unk1Var, 4, data + offset + 0x8, 4);
-			memcpy_s(&unk2Var, 4, data + offset + 0xC, 4);
-			memcpy_s(&unk3Var, 4, data + offset + 0x10, 4);
-			memcpy_s(&unk4Var, 4, data + offset + 0x14, 4);
-			memcpy_s(&unk5Var, 4, data + offset + 0x18, 4);
-			memcpy_s(&unk6Var, 4, data + offset + 0x1C, 4);
+			memcpy(&nameOffsetVar, data + offset, 4);
+			memcpy(&dataOffsetVar, data + offset + 0x4, 4);
+			memcpy(&unk1Var, data + offset + 0x8, 4);
+			memcpy(&unk2Var, data + offset + 0xC, 4);
+			memcpy(&unk3Var, data + offset + 0x10, 4);
+			memcpy(&unk4Var, data + offset + 0x14, 4);
+			memcpy(&unk5Var, data + offset + 0x18, 4);
+			memcpy(&unk6Var, data + offset + 0x1C, 4);
 
 			entries[i].nameOffset = flipEndian(nameOffsetVar);
 			entries[i].dataOffset = flipEndian(dataOffsetVar);
@@ -67,14 +74,14 @@ void DarkPackageFileTable::ReadPackageFileTable(char* data, int fileCount, char 
 		}
 
 		if (byteswap == 0) {
-			memcpy_s(&entries[i].nameOffset, 4, data + offset, 4);
-			memcpy_s(&entries[i].dataOffset, 4, data + offset + 0x4, 4);
-			memcpy_s(&entries[i].unk1, 4, data + offset + 0x8, 4);
-			memcpy_s(&entries[i].unk2, 4, data + offset + 0xC, 4);
-			memcpy_s(&entries[i].unk3, 4, data + offset + 0x10, 4);
-			memcpy_s(&entries[i].unk4, 4, data + offset + 0x14, 4);
-			memcpy_s(&entries[i].unk5, 4, data + offset + 0x18, 4);
-			memcpy_s(&entries[i].unk6, 4, data + offset + 0x1C, 4);
+			memcpy(&entries[i].nameOffset, data + offset, 4);
+			memcpy(&entries[i].dataOffset, data + offset + 0x4, 4);
+			memcpy(&entries[i].unk1, data + offset + 0x8, 4);
+			memcpy(&entries[i].unk2, data + offset + 0xC, 4);
+			memcpy(&entries[i].unk3, data + offset + 0x10, 4);
+			memcpy(&entries[i].unk4, data + offset + 0x14, 4);
+			memcpy(&entries[i].unk5, data + offset + 0x18, 4);
+			memcpy(&entries[i].unk6, data + offset + 0x1C, 4);
 		}
 
 		offset += 0x20;
@@ -85,7 +92,7 @@ void DarkPackageFileTable::ReadPackageFileTable(char* data, int fileCount, char 
 	for (int i = 0; i < fileCount; i++) {
 		fileNames[i] = new char[0x80]();
 
-		strcpy_s(fileNames[i], 0x80, data + entries[i].nameOffset);
+		strcpy(fileNames[i], data + entries[i].nameOffset);
 
 		printf("FILE %d - %s\n", i, fileNames[i]);
 	}

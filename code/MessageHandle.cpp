@@ -9,6 +9,13 @@
 #include "MessageHandle.h"
 #endif
 
+#ifndef _WIN32
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <cstring>
+#endif
+
 char title[256];
 ErrorPrompt errorPromptParams;
 
@@ -16,35 +23,35 @@ void FireMessage(const char* message, ErrorType severity) {
 
 	ImGui::DebugLog("FIREMESSAGE - %s\n", message);
 
-	strcpy_s(errorPromptParams.errorMessage, 1024, message);
+	strcpy(errorPromptParams.errorMessage, message);
 	errorPromptParams.errorSeverity = severity;
 
 	memset(title, 0, 256);
-
 	if (severity == ErrorType_None) {
 		CloseMessage();
 		return;
 	}
 
 	if (severity == ErrorType_Info) {
-		strcpy_s(title, 256, "Informational Message");
-		MessageBeep(MB_ICONINFORMATION);
+		strcpy(title, "Informational Message");
+		//MessageBeep(MB_ICONINFORMATION);
 	}
 
 	if (severity == ErrorType_Warn) {
-		strcpy_s(title, 256, "Warning Message");
-		MessageBeep(MB_ICONEXCLAMATION);
+		strcpy(title, "Warning Message");
+		//MessageBeep(MB_ICONEXCLAMATION);
 	}
 
 	if (severity == ErrorType_Error) {
-		strcpy_s(title, 256, "Error Message");
-		MessageBeep(MB_ICONERROR);
+		strcpy(title, "Error Message");
+		//MessageBeep(MB_ICONERROR);
 	}
 
 	if (severity == ErrorType_Critical) {
-		strcpy_s(title, 256, "Critical Message");
-		MessageBeep(MB_ICONERROR);
+		strcpy(title, "Critical Message");
+		//MessageBeep(MB_ICONERROR);
 	}
+
 
 	errorPromptParams.showErrorPrompt = true;
 }

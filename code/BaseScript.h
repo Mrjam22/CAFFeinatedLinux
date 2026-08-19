@@ -371,7 +371,7 @@ public:
 	}
 };
 
-dbScript_Base* CreateScriptData(dbScript_BanjoXEnum markerType) {
+inline dbScript_Base* CreateScriptData(dbScript_BanjoXEnum markerType) {
 	switch (markerType) {
 	case dbScript_Debug_Printf: { printf("DEBUG PRINTF\n"); return new dbScript_DebugPrintf(); } break;
 	default: { printf("BASE\n"); return new dbScript_Base(); } break;

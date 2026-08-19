@@ -20,7 +20,7 @@ struct MarkerWindowParams {
 
 MarkerWindowParams* GetMarkerEditorWindowParameters();
 
-bool IsSpecialMarkerEntry(dbMarkerEnum markerId) {
+inline bool IsSpecialMarkerEntry(dbMarkerEnum markerId) {
 	if (markerSizes[markerId] != 0x34) return true;
 	return false;
 }
