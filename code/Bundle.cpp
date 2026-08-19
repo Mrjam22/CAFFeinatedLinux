@@ -4,9 +4,14 @@
 #include "CommonReader.h"
 #include "Bundle.h"
 
-#ifndef _MSC_VER
+#ifndef _WIN32
+
 #include <safeclib/safe_mem_lib.h>
 #include <safeclib/safe_str_lib.h>
+
+#endif
+
+#ifndef _MSC_VER
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
