@@ -125,7 +125,12 @@
 
 #include "LoadingProcess.h"
 
+#ifndef __APPLE__
+
 #ifndef _MSC_VER
+
+
+
 const unsigned char logo[] = {
 	#embed "../resource/icon.png"
 
@@ -135,6 +140,8 @@ const unsigned char logo_large[] = {
 	#embed "../resource/icon_large.png"
 
 };
+
+#endif
 
 #endif
 
@@ -250,6 +257,7 @@ int32_t mainWindowCode() {
 	// Setup our icons for the window.
 	GLFWimage images[2];
 
+	#ifndef __APPLE__
 	#ifdef _MSC_VER
 	images[0] = LoadResourceImageToGLFWImage(IDB_PNG8, L"PNG"); // Small Icon
 	images[1] = LoadResourceImageToGLFWImage(IDB_PNG9, L"PNG"); // Large Icon
@@ -290,6 +298,7 @@ int32_t mainWindowCode() {
 	stbi_image_free(data2);
 	#endif
 
+    #endif
 
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 	{
