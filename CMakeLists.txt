@@ -5,10 +5,13 @@ if(MSVC)
 	  message(FATAL_ERROR
 		"Use a build directory instead: cmake -B build or run generate.bat.")
   endif()
-  project(CAFFeinated LANGUAGES C CXX)
+
 endif()
 set(CMAKE_INTERMEDIATE_DIR_STRATEGY "SHORT" CACHE STRING "")
 
+if(MSVC)
+  project(CAFFeinated LANGUAGES C CXX)
+endif()
 
 if(NOT MSVC)
     project(CAFFeinated LANGUAGES C CXX RC)
