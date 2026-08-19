@@ -5148,67 +5148,6 @@ static GLuint LoadImageFromData(unsigned char* data, int32_t width, int32_t heig
 /// <param name="resourceType"></param>
 /// <returns>If successful, the target of the texture.</returns>
 
-static GLuint LoadResourceImage(int resourceName, const wchar_t* resourceType) {
-	// HRESULT hr = S_OK;
- //
-	// // Resource management.
-	// HRSRC imageResHandle = NULL;
-	// HGLOBAL imageResDataHandle = NULL;
-	// unsigned char* pImageFile = NULL;
-	// DWORD imageFileSize = 0;
- //
-	// // Locate the resource in the application's executable.
-	// imageResHandle = FindResource(
-	// 	NULL,             // This component.
-	// 	MAKEINTRESOURCE(resourceName),   // Resource name.
-	// 	resourceType);        // Resource type.
- //
-	// hr = (imageResHandle ? S_OK : E_FAIL);
- //
-	// // Load the resource to the HGLOBAL.
-	// if (SUCCEEDED(hr)) {
-	// 	imageResDataHandle = LoadResource(NULL, imageResHandle);
-	// 	hr = (imageResDataHandle ? S_OK : E_FAIL);
-	// }
- //
-	// // Lock the resource to retrieve memory pointer.
-	// if (SUCCEEDED(hr)) {
-	// 	pImageFile = (unsigned char*)LockResource(imageResDataHandle);
-	// 	hr = (pImageFile ? S_OK : E_FAIL);
-	// }
- //
-	// // Calculate the size.
-	// if (SUCCEEDED(hr)) {
-	// 	imageFileSize = SizeofResource(NULL, imageResHandle);
-	// 	hr = (imageFileSize ? S_OK : E_FAIL);
-	// }
- //
-	// GLuint tex;
-	// int w;
-	// int h;
-	// int comp;
-	// unsigned char* image = stbi_load_from_memory(pImageFile, imageFileSize, &w, &h, &comp, STBI_rgb_alpha);
- //
-	// if (image == nullptr)
-	// 	throw(std::string("Failed to load texture"));
- //
-	// glGenTextures(1, &tex);
- //
-	// glBindTexture(GL_TEXTURE_2D, tex);
- //
-	// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
- //
-	// glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
- //
-	// glBindTexture(GL_TEXTURE_2D, 0);
- //
-	// stbi_image_free(image);
- //
-	// return tex;
-}
-
-
 #ifdef _WIN32
 static GLuint LoadResourceImage(int32_t resourceName, const wchar_t* resourceType) {
 	HRESULT hr = S_OK;
