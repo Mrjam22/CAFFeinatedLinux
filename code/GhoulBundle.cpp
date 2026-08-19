@@ -2,8 +2,6 @@
 #include "GhoulBundle.h"
 
 #ifndef _WIN32
-#include <safeclib/safe_mem_lib.h>
-#include <safeclib/safe_str_lib.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -21,19 +19,19 @@ bool GhoulBundle::ReadBundleFile(char* data, size_t dataSize) {
 	dataPtr = data;
 
 	try {
-		memcpy_s(&entryCount, sizeof(int16_t), data, sizeof(int16_t));
-		memcpy_s(&isCompressed, sizeof(int16_t), data + 2, sizeof(int16_t));
-		memcpy_s(&iUnk1, sizeof(int32_t), data + 4, sizeof(int32_t));
+		memcpy(&entryCount, data, sizeof(int16_t));
+		memcpy(&isCompressed, data + 2, sizeof(int16_t));
+		memcpy(&iUnk1, data + 4, sizeof(int32_t));
 
-		memcpy_s(&fileListOffset, sizeof(int32_t), data + 0x8, sizeof(int32_t));
-		memcpy_s(&fileListDataSize, sizeof(int32_t), data + 0xC, sizeof(int32_t));
-		memcpy_s(&gpuListOffset, sizeof(int32_t), data + 0x10, sizeof(int32_t));
-		memcpy_s(&gpuListSize, sizeof(int32_t), data + 0x14, sizeof(int32_t));
+		memcpy(&fileListOffset, data + 0x8, sizeof(int32_t));
+		memcpy(&fileListDataSize, data + 0xC, sizeof(int32_t));
+		memcpy(&gpuListOffset, data + 0x10, sizeof(int32_t));
+		memcpy(&gpuListSize, data + 0x14, sizeof(int32_t));
 
-		memcpy_s(&gpuSectOffset, sizeof(int32_t), data + 0x18, sizeof(int32_t));
-		memcpy_s(&gpuSectSize, sizeof(int32_t), data + 0x1C, sizeof(int32_t));
-		memcpy_s(&dataSectOffset, sizeof(int32_t), data + 0x20, sizeof(int32_t));
-		memcpy_s(&dataSectSize, sizeof(int32_t), data + 0x24, sizeof(int32_t));
+		memcpy(&gpuSectOffset, data + 0x18, sizeof(int32_t));
+		memcpy(&gpuSectSize, data + 0x1C, sizeof(int32_t));
+		memcpy(&dataSectOffset, data + 0x20, sizeof(int32_t));
+		memcpy(&dataSectSize, data + 0x24, sizeof(int32_t));
 
 		int32_t totalSize = 0x28 + fileListDataSize + gpuListSize + gpuSectSize + dataSectSize;
 
@@ -44,21 +42,21 @@ bool GhoulBundle::ReadBundleFile(char* data, size_t dataSize) {
 		int32_t size = dataSize - 0x28;
 
 		if (isCompressed == 1) {
-			memcpy_s(uncompedBaseData, 0x28, data, 0x28);
+			memcpy(uncompedBaseData, data, 0x28);
 
 			// Do the section table first
 			char* in = (char*)malloc(size);
 
-			memcpy_s(in, size, data + fileListOffset, size);
+			memcpy(in, data + fileListOffset, size);
 
 			char* out = InflateData(in, 9, size, fileListDataSize + gpuListSize + gpuSectSize + dataSectSize);
 
-			memcpy_s(uncompedBaseData + 0x28, fileListDataSize + gpuListSize + gpuSectSize + dataSectSize, out, fileListDataSize + gpuListSize + gpuSectSize + dataSectSize);
+			memcpy(uncompedBaseData + 0x28, out, fileListDataSize + gpuListSize + gpuSectSize + dataSectSize);
 
 			free(out);
 		}
 		else {
-			memcpy_s(uncompedBaseData, totalSize, data, totalSize);
+			memcpy(uncompedBaseData, data, totalSize);
 		}
 
 		dataPtr = uncompedBaseData;

@@ -9,8 +9,6 @@
 
 
 #ifndef _WIN32
-#include <safeclib/safe_mem_lib.h>
-#include <safeclib/safe_str_lib.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -338,7 +336,7 @@ void readExternalLoctextFile(char* data) {
 void AssignLoctextFilename(char* filename) {
 	printf("%s\n", filename);
 	memset(loctextWindowParameters.originalFilename, 0, 128);
-	strcpy_s(loctextWindowParameters.originalFilename, 128, filename);
+	strcpy(loctextWindowParameters.originalFilename, filename);
 	loctextWindowParameters.hasAssignedFileName = true;
 	printf("%s\n", loctextWindowParameters.originalFilename);
 }

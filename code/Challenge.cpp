@@ -2,8 +2,6 @@
 #include "CommonReader.h"
 
 #ifndef _WIN32
-#include <safeclib/safe_mem_lib.h>
-#include <safeclib/safe_str_lib.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -16,10 +14,10 @@ void ChallengeNullDef::ParseHeader(char* data) {
 	int taskIDVar = 0;
 	int sizeVar = 0;
 
-	memcpy_s(&idVar, 4, data, 4);
-	memcpy_s(&unk1Var, 4, data + 4, 4);
-	memcpy_s(&taskIDVar, 4, data + 8, 4);
-	memcpy_s(&sizeVar, 4, data + 0xC, 4);
+	memcpy(&idVar, data, 4);
+	memcpy(&unk1Var, data + 4, 4);
+	memcpy(&taskIDVar, data + 8, 4);
+	memcpy(&sizeVar, data + 0xC, 4);
 
 	header.reqId = (dbChallengeRequirement_e)flipEndian(idVar);
 	header.unk1 = flipEndian(unk1Var);
@@ -45,9 +43,9 @@ void ChallengeCommonDef::ParseCommon(char* data) {
 	memset(specialObjectTag02, 0, 0x40);
 	memset(specialObjectIndicator02, 0, 0x40);
 
-	strcpy_s(worldNameTag, 0x20, data + 0x10);
-	strcpy_s(challengeTag, 0x20, data + 0x30);
-	strcpy_s(gameStyleTag, 0x20, data + 0x50);
+	strcpy(worldNameTag, data + 0x10);
+	strcpy(challengeTag, data + 0x30);
+	strcpy(gameStyleTag, data + 0x50);
 
 
 }
@@ -56,8 +54,8 @@ void challengeStayInVehicle::ParseStayInVehicle(char* data) {
 	int canPlayersGetOutVar = 0; // 0x10
 	int canBaddiesGetOutVar = 0; // 0x14
 
-	memcpy_s(&canPlayersGetOutVar, 4, data + 0x10, 4);
-	memcpy_s(&canBaddiesGetOutVar, 4, data + 0x14, 4);
+	memcpy(&canPlayersGetOutVar, data + 0x10, 4);
+	memcpy(&canBaddiesGetOutVar, data + 0x14, 4);
 
 	canPlayersGetOut = flipEndian(canPlayersGetOutVar);
 	canBaddiesGetOut = flipEndian(canBaddiesGetOutVar);

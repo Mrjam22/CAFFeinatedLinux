@@ -6,8 +6,6 @@
 #endif
 
 #ifndef _WIN32
-#include <safeclib/safe_mem_lib.h>
-#include <safeclib/safe_str_lib.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -90,7 +88,7 @@ void Script::ReadScript(char* data) {
 				char msg[256];
 				memset(msg, 0, 256);
 
-				strncpy_s(msg, 256, scriptPtr + pos + 8, 256);
+				strncpy(msg, scriptPtr + pos + 8, 256);
 
 				printf(" (%s)\n", msg);
 			}
@@ -103,7 +101,7 @@ void Script::ReadScript(char* data) {
 				int32_t compVal = 0;
 				memset(flag, 0, 0x40);
 
-				strncpy_s(flag, 0x40, scriptPtr + pos + 8, 0x40);
+				strncpy(flag, scriptPtr + pos + 8, 0x40);
 
 				memcpy(&compVal, scriptPtr + pos + 0x48, sizeof(int32_t));
 
@@ -1742,10 +1740,10 @@ void Vehicle::ReadVehicle(char* data, bool isFromSave) {
 		int32_t unk2Val = 0;
 		int32_t unk3Val = 0;
 
-		memcpy_s(&nameType, sizeof(char), vehiclePtr + (pos + 0x78), sizeof(char));
-		memcpy_s(&unk7, sizeof(char), vehiclePtr + (pos + 0x79), sizeof(char));
-		memcpy_s(&unk8, sizeof(char), vehiclePtr + (pos + 0x7A), sizeof(char));
-		memcpy_s(&unk9, sizeof(char), vehiclePtr + (pos + 0x7B), sizeof(char));
+		memcpy(&nameType, vehiclePtr + (pos + 0x78), sizeof(char));
+		memcpy(&unk7, vehiclePtr + (pos + 0x79), sizeof(char));
+		memcpy(&unk8, vehiclePtr + (pos + 0x7A), sizeof(char));
+		memcpy(&unk9, vehiclePtr + (pos + 0x7B), sizeof(char));
 
 		printf("Allocating Namespace\n");
 
@@ -1771,7 +1769,7 @@ void Vehicle::ReadVehicle(char* data, bool isFromSave) {
 
 		// Don't need to do anything special if we're just reading from a vehicle file.
 		if (nameType == 0) {
-			memcpy_s(vehicleName, 0x40, vehiclePtr + pos + 0x20, 0x40);
+			memcpy(vehicleName, vehiclePtr + pos + 0x20, 0x40);
 			printf("%s\n", vehicleName);
 		}
 
@@ -1780,7 +1778,7 @@ void Vehicle::ReadVehicle(char* data, bool isFromSave) {
 			int32_t namePos = pos + 0x20;
 			wchar_t newChar = L'\n';
 			for (int32_t i = 0, c = 0; i < 0x40; i += 2, c++) {
-				memcpy_s(&newChar, sizeof(wchar_t), vehiclePtr + namePos + i, sizeof(wchar_t));
+				memcpy(&newChar, vehiclePtr + namePos + i, sizeof(wchar_t));
 				newChar = flipEndian(newChar);
 
 				if (newChar == 0) break;

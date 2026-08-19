@@ -233,7 +233,7 @@ if(NOT MSVC)
     target_link_libraries(CAFFeinated PRIVATE -static pthread dl)
   else()
     set(_GLFW_X11 1)
-    target_link_libraries(CAFFeinated PRIVATE GL X11 Xi Xrandr Xinerama Xcursor rt m dl safec  pthread dl)
+    target_link_libraries(CAFFeinated PRIVATE GL X11 Xi Xrandr Xinerama Xcursor rt m dl pthread dl)
   endif()
 endif()
 

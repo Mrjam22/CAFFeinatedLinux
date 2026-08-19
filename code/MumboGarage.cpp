@@ -34,8 +34,6 @@
 
 #define MAX_PATH 260
 
-#include <safeclib/safe_mem_lib.h>
-#include <safeclib/safe_str_lib.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -2135,7 +2133,7 @@ void displayActiveBundleV31Property() {
 				strcpy(lbl, ptr + 1);
 
 				int32_t offs = ptr - activeKameoDBFile.fileTable.fileNames[fileId];
-				strncpy_s(lblpath, 1024, activeKameoDBFile.fileTable.fileNames[fileId], offs);
+				strncpy(lblpath, activeKameoDBFile.fileTable.fileNames[fileId], offs);
 			}
 			else {
 				strcpy(lbl, activeKameoDBFile.fileTable.fileNames[fileId]);
@@ -2341,7 +2339,7 @@ void displayActiveBundleV26Property() {
 				strcpy(lbl, ptr + 1);
 
 				int32_t offs = ptr - activeKameoDBFile.fileTable.fileNames[fileId];
-				strncpy_s(lblpath, 1024, activeKameoDBFile.fileTable.fileNames[fileId], offs);
+				strncpy(lblpath, activeKameoDBFile.fileTable.fileNames[fileId], offs);
 			}
 			else {
 				strcpy(lbl, activeKameoDBFile.fileTable.fileNames[fileId]);

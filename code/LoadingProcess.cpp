@@ -2,8 +2,6 @@
 #include "LoadingProcess.h"
 
 #ifndef _WIN32
-#include <safeclib/safe_mem_lib.h>
-#include <safeclib/safe_str_lib.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -29,7 +27,7 @@ void OpenLoadingPromptWidget() {
 void SetupLoadingPromptWidget(const char* message) {
 
 	loadingWidgetParams.showLoadingPrompt = true;
-	strcpy_s(loadingWidgetParams.loadingMessage, 1024, message);
+	strcpy(loadingWidgetParams.loadingMessage, message);
 }
 
 /// <summary>
@@ -75,7 +73,7 @@ void OpenLoadingBarPromptWidget() {
 void SetupLoadingBarPromptWidget(const char* message, int totalAmount) {
 
 	loadingBarWidgetParams.showLoadingBarPrompt = true;
-	strcpy_s(loadingBarWidgetParams.loadingMessage, 1024, message);
+	strcpy(loadingBarWidgetParams.loadingMessage, message);
 	loadingBarWidgetParams.totalAmount = totalAmount;
 	loadingBarWidgetParams.currentSaved = 0;
 }
