@@ -9,12 +9,14 @@ if(MSVC)
 endif()
 set(CMAKE_INTERMEDIATE_DIR_STRATEGY "SHORT" CACHE STRING "")
 
-if(MSVC)
-  project(CAFFeinated LANGUAGES C CXX)
+project(CAFFeinated LANGUAGES C CXX)
+
+
+if(MINGW)
+    set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> --input-format=rc -O coff <DEFINES> <INCLUDES> -i <SOURCE> -o <OBJECT>")
 endif()
 
 if(NOT MSVC)
-    project(CAFFeinated LANGUAGES C CXX RC)
     add_compile_options(-Wall -Wextra)
 endif()
 
