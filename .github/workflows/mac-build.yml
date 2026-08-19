@@ -45,8 +45,9 @@ jobs:
           ls -la build/
           # Tip: If your binary goes to a subfolder like 'bin', you can verify it here:
           # ls -la build/bin/
-    - name: Compress and Upload .app Bundle
-      run: ditto -c -k --sequesterRsrc build/bin/CAFFeinated.app  build/bin/CAFFeinated-Mac.zip
+
+      - name: Compress and Upload .app Bundle
+        run: ditto -c -k --sequesterRsrc build/bin/CAFFeinated.app  build/bin/CAFFeinated-Mac.zip
 
 
       - name: Upload build artifact
