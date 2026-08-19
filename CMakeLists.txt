@@ -216,6 +216,9 @@ target_include_directories(CAFFeinated PRIVATE
 	"${TP}/imgui" "${TP}/imgui/backends"
 	"${TP}/glad/include" "${TP}/stb")
 
+target_compile_definitions(CAFFeinated PRIVATE
+	_CRT_SECURE_NO_WARNINGS UNICODE _UNICODE)
+
 target_link_libraries(CAFFeinated PRIVATE glfw3 nfd zlibstatic squish)
 
 if(MSVC)
@@ -234,7 +237,7 @@ if(NOT MSVC)
     target_link_libraries(CAFFeinated PRIVATE GL X11 Xi Xrandr Xinerama Xcursor rt m dl pthread dl)
   else()
       set(_GLFW_X11 1)
-	  target_link_libraries(CAFFeinated PRIVATE -static pthread dl)
+	  target_link_libraries(CAFFeinated PRIVATE pthread dl)
   endif()
 endif()
 
