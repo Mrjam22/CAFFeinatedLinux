@@ -9,6 +9,13 @@
 #include <cstring>
 #endif
 
+#ifndef _MSC_VER
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <cstring>
+#endif
 
 const int32_t SRC_ENDIANLITTLE = 0;
 const int32_t SRC_ENDIANBIG = 1;

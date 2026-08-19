@@ -43,6 +43,14 @@
 #include <stdint.h>
 #endif
 
+#ifndef _MSC_VER
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <cstring>
+#endif
+
 //Include all the necessary ImGui things we need.
 #include "imgui_includes.h"
 
