@@ -40,6 +40,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <cstring>
+#include <stdint.h>
 #endif
 
 //Include all the necessary ImGui things we need.
