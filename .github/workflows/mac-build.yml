@@ -39,10 +39,7 @@ jobs:
 
       # 4. Consolidated the multi-step build/dir debugging block into clean steps
       - name: Build
-        run: cmake -B build -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
-
-     - name: Build Make
-       run: make ./
+        run: cmake --build build -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 -DCMAKE_OSX_ARCHITECTURES="x86_64" --config Release
 
 
       - name: Debug Output Directory
