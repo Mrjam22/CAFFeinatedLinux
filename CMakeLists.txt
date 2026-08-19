@@ -215,9 +215,6 @@ target_include_directories(CAFFeinated PRIVATE
 	"${TP}/imgui" "${TP}/imgui/backends"
 	"${TP}/glad/include" "${TP}/stb")
 
-target_compile_definitions(CAFFeinated PRIVATE
-	_CRT_SECURE_NO_WARNINGS UNICODE _UNICODE)
-
 target_link_libraries(CAFFeinated PRIVATE glfw3 nfd zlibstatic squish)
 
 if(MSVC)
