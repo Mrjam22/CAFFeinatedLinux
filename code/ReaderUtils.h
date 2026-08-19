@@ -1,5 +1,6 @@
 #pragma once
 
+<<<<<<< HEAD
 #ifndef _WIN32
 #include <stdio.h>
 #include <stdlib.h>
@@ -8,8 +9,9 @@
 #endif
 
 
-const int SRC_ENDIANLITTLE = 0;
-const int SRC_ENDIANBIG = 1;
+const int32_t SRC_ENDIANLITTLE = 0;
+const int32_t SRC_ENDIANBIG = 1;
+
 
 // Start of setting up the ZLIB stuff.
 #include "zlib.h"
@@ -39,7 +41,7 @@ static char* ReadContentsFromFile(char* fileName) {
 	}
 
 	fseek(currentFile, 0L, SEEK_END);
-	int length = ftell(currentFile);
+	int32_t length = ftell(currentFile);
 	fseek(currentFile, 0L, SEEK_SET);
 
 	char* data = (char*)malloc(length);
@@ -59,11 +61,11 @@ static char* ReadContentsFromFile(char* fileName) {
 /// <param name="compedSize">The size of the compressed data.</param>
 /// <param name="uncompedSize">The size of the decompressed data.</param>
 /// <returns>If decompression is successful, the decompressed data. Otherwise, it returns what was passed in.</returns>
-static char* InflateData(char* inputData, int level, size_t compedSize, size_t uncompedSize) {
+static char* InflateData(char* inputData, int32_t level, size_t compedSize, size_t uncompedSize) {
 	char* outputData = (char*)malloc(uncompedSize);
 
 	//Initialize ZLIB decompression in the event that we come across a compressed file.
-	int ret;
+	int32_t ret;
 	unsigned have;
 	z_stream strm;
 	unsigned char* in = (unsigned char*)malloc(compedSize);
@@ -125,7 +127,7 @@ static char* InflateData(char* inputData, int level, size_t compedSize, size_t u
  *  is an error reading or writing the files. */
 inline char* inf(FILE* source)
 {
-	int ret;
+	int32_t ret;
 	unsigned have;
 	z_stream strm;
 	unsigned char in[CHUNK];
@@ -142,7 +144,7 @@ inline char* inf(FILE* source)
 		return nullptr;
 
 	char* dest = (char*)malloc(CHUNK);
-	int pos = 0;
+	int32_t pos = 0;
 
 	/* decompress until deflate stream ends or end of file */
 	do {
@@ -190,7 +192,7 @@ inline char* inf(FILE* source)
 }
 
 static void glStringReplace(char* str, char c, char rep) {
-	for (int i = 0; i < strlen(str); i++) {
+	for (int32_t i = 0; i < strlen(str); i++) {
 		if (str[i] == c) str[i] = rep;
 	}
 }
@@ -198,13 +200,16 @@ static void glStringReplace(char* str, char c, char rep) {
 /// Taken directly from Mumbo's Motors, developed by XephyrCraft. Generates a new header checksum for R1 Bundles.
 /// CREDIT TO MOJOBOJO FOR THIS AWESOME, WORKING HEADER CHECKSUM RECALCULATOR.
 /// Calculate the new header checksum if pointers change.
-static unsigned int checksum32(char* data, size_t length) {
-	unsigned r11 = 0;
+static uint32_t checksum32(char* data, size_t length) {
+	uint32_t r11 = 0;
 
-	for (int i = 0; i < length; i++)
+	uint32_t r8 = 0;
+	uint32_t r10 = 0;
+
+	for (int32_t i = 0; i < length; i++)
 	{
-		unsigned r8 = data[i];
-		unsigned r10 = r11 << 4;
+		r8 = data[i];
+		r10 = r11 << 4;
 
 		if ((r8 & 0x80) > 0)
 		{
@@ -238,7 +243,7 @@ static char* compileWSToS(wchar_t* ws, size_t size) {
 	char* buf = (char*)malloc(size);
 	memset(buf, 0, size);
 
-	for (int i = 0; i < size / 2; i++) {
+	for (int32_t i = 0; i < size / 2; i++) {
 		buf[i] = (char)(ws[i] & 0xFF);
 	}
 
@@ -255,25 +260,25 @@ static wchar_t* compileSToWS(char* s, size_t size) {
 	wchar_t* buf = (wchar_t*)malloc(size);
 	memset(buf, 0, size);
 
-	for (int i = 0; i < size / 2; i++) {
+	for (int32_t i = 0; i < size / 2; i++) {
 		buf[i] = (wchar_t)(s[i]);
 	}
 
 	return buf;
 }
 
-static int* compileChar3ToIntArray(char val1, char val2, char val3) {
-	int* finalVal = (int*)malloc(12);
+static int32_t* compileChar3ToIntArray(char val1, char val2, char val3) {
+	int32_t* finalVal = (int32_t*)malloc(12);
 	memset(finalVal, 0, 12);
 
-	finalVal[0] += (int)val1;
-	finalVal[1] += (int)val2;
-	finalVal[2] += (int)val3;
+	finalVal[0] += (int32_t)val1;
+	finalVal[1] += (int32_t)val2;
+	finalVal[2] += (int32_t)val3;
 
 	return finalVal;
 }
 
-static char* compileIntArrayToChar3(int* arr) {
+static char* compileIntArrayToChar3(int32_t* arr) {
 	char* finalVal = (char*)malloc(3);
 	memset(finalVal, 0, 3);
 
@@ -284,9 +289,9 @@ static char* compileIntArrayToChar3(int* arr) {
 	return finalVal;
 }
 
-static int compileU8ColToU32Col(char r, char g, char b, char a) {
+static int32_t compileU8ColToU32Col(char r, char g, char b, char a) {
 	char* tmpVal = (char*)malloc(4);
-	unsigned int finalVal = 0;
+	uint32_t finalVal = 0;
 
 	tmpVal[0] = r;
 	tmpVal[1] = g;
@@ -299,7 +304,7 @@ static int compileU8ColToU32Col(char r, char g, char b, char a) {
 	return finalVal;
 }
 
-static char* compileU32ColToU8Col(unsigned int rgba) {
+static char* compileU32ColToU8Col(uint32_t rgba) {
 	char finalVal[4];
 
 	finalVal[0] = rgba & 0xFF;
@@ -315,7 +320,7 @@ static char* compileU32ColToU8Col(unsigned int rgba) {
 /// </summary>
 /// <param name="val"></param>
 /// <returns><paramref name="val"/>, opposite of the current endian.</returns>
-static unsigned long long flipEndian(unsigned long long val) {
+static uint64_t flipEndian(uint64_t val) {
 	return ((0xFF00000000000000 & val) >> 56) | ((0x00FF000000000000 & val) >> 40) | ((0x0000FF0000000000 & val) >> 24) | ((0x000000FF00000000 & val) >> 8) | ((0x00000000ff000000 & val) << 8) | ((0x0000000000ff0000 & val) << 24) | ((0x000000000000ff00 & val) << 40) | ((0x00000000000000ff & val) << 56);
 }
 
@@ -324,7 +329,7 @@ static unsigned long long flipEndian(unsigned long long val) {
 /// </summary>
 /// <param name="val"></param>
 /// <returns><paramref name="val"/>, opposite of the current endian.</returns>
-static long long flipEndian(long long val) {
+static int64_t flipEndian(int64_t val) {
 	return ((0xFF00000000000000 & val) >> 56) | ((0x00FF000000000000 & val) >> 40) | ((0x0000FF0000000000 & val) >> 24) | ((0x000000FF00000000 & val) >> 8) | ((0x00000000ff000000 & val) << 8) | ((0x0000000000ff0000 & val) << 24) | ((0x000000000000ff00 & val) << 40) | ((0x00000000000000ff & val) << 56);
 }
 
@@ -333,7 +338,7 @@ static long long flipEndian(long long val) {
 /// </summary>
 /// <param name="val"></param>
 /// <returns><paramref name="val"/>, opposite of the current endian.</returns>
-static int flipEndian(int val) {
+static int32_t flipEndian(int32_t val) {
 	return ((0xFF000000 & val) >> 24) | ((0x00FF0000 & val) >> 8) | ((0x0000FF00 & val) << 8) | ((0x000000FF & val) << 24);
 }
 
@@ -342,7 +347,7 @@ static int flipEndian(int val) {
 /// </summary>
 /// <param name="val"></param>
 /// <returns><paramref name="val"/>, opposite of the current endian.</returns>
-static unsigned int flipEndian(unsigned int val) {
+static uint32_t flipEndian(uint32_t val) {
 	return ((0xFF000000 & val) >> 24) | ((0x00FF0000 & val) >> 8) | ((0x0000FF00 & val) << 8) | ((0x000000FF & val) << 24);
 }
 
@@ -352,7 +357,7 @@ static unsigned int flipEndian(unsigned int val) {
 /// <param name="val"></param>
 /// <param name="endian"></param>
 /// <returns>Outputs a float, opposite of the specified endian.</returns>
-static float flipEndian_f32(char* val, int endian) {
+static float flipEndian_f32(char* val, int32_t endian) {
 	char* tmpVal = (char*)malloc(4);
 	float finalVal = 0;
 
@@ -372,7 +377,7 @@ static float flipEndian_f32(char* val, int endian) {
 /// </summary>
 /// <param name="val"></param>
 /// <returns><paramref name="val"/>, opposite of the current endian.</returns>
-static short flipEndian(short val) {
+static int16_t flipEndian(int16_t val) {
 	return ((0xFF00 & val) >> 8) | ((0x00FF & val) << 8);
 }
 
@@ -381,7 +386,7 @@ static short flipEndian(short val) {
 /// </summary>
 /// <param name="val"></param>
 /// <returns><paramref name="val"/>, opposite of the current endian.</returns>
-static unsigned short flipEndian(unsigned short val) {
+static uint16_t flipEndian(uint16_t val) {
 	return ((0xFF00 & val) >> 8) | ((0x00FF & val) << 8);
 }
 
