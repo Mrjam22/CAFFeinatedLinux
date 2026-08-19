@@ -127,7 +127,7 @@ else()
 	 "${TP}/glfw/src/cocoa_window.m"
 	 "${TP}/glfw/src/nsgl_context.m")
      target_include_directories(glfw3 PUBLIC "${TP}/glfw/include")
-     target_compile_definitions(glfw3 PRIVATE _GLFW_X11)
+     target_compile_definitions(glfw3 PRIVATE _GLFW_COCOA)
      add_library(nfd STATIC "${TP}/nativefiledialog/src/nfd_cocoa.m")
 	 find_package(PkgConfig REQUIRED)
      target_include_directories(nfd PUBLIC "${TP}/nativefiledialog/src/include")
