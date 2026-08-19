@@ -5,12 +5,13 @@ if(MSVC)
 	  message(FATAL_ERROR
 		"Use a build directory instead: cmake -B build or run generate.bat.")
   endif()
+  project(CAFFeinated LANGUAGES C CXX)
 endif()
 set(CMAKE_INTERMEDIATE_DIR_STRATEGY "SHORT" CACHE STRING "")
 
-project(CAFFeinated LANGUAGES C CXX)
 
 if(NOT MSVC)
+    project(CAFFeinated LANGUAGES C CXX RC)
     add_compile_options(-Wall -Wextra)
 endif()
 
@@ -149,7 +150,7 @@ set(RES_ASSETS ${RES_IMAGES} ${RES_FONTS} "${RES}/exeIcon.ico")
 set_source_files_properties(${RES_ASSETS} PROPERTIES HEADER_FILE_ONLY TRUE)
 
 
-if(MSVC)
+if(WIN32)
  set_target_properties(glfw3 nfd zlibstatic squish PROPERTIES FOLDER "thirdparty")
  add_executable(CAFFeinated
 	 ${APP_SOURCES}
