@@ -132,7 +132,7 @@ else()
 	 find_package(PkgConfig REQUIRED)
      target_include_directories(nfd PUBLIC "${TP}/nativefiledialog/src/include")
      set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "Minimum macOS deployment target")
-	 set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64" CACHE STRING "Build architectures for macOS")
+	 set(CMAKE_OSX_ARCHITECTURES "x86_64" CACHE STRING "Build architectures for macOS")
 
 
 endif()
