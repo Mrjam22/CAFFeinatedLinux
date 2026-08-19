@@ -239,6 +239,7 @@ if(NOT MSVC)
   else()
       set(_GLFW_X11 1)
 	  target_link_libraries(CAFFeinated PRIVATE pthread dl "-framework Cocoa" "-framework IOKit" "-framework CoreVideo" "-framework CoreFoundation" "-framework QuartzCore")
+  endif()
 endif()
 
 set_target_properties(CAFFeinated PROPERTIES
