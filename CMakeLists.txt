@@ -65,7 +65,7 @@ if(WIN32)
      target_link_libraries(nfd PUBLIC ole32 uuid shell32)
 
 
-else()
+elseif(LINUX)
 
  add_library(glfw3 STATIC
 	 "${TP}/glfw/src/context.c"
@@ -99,6 +99,40 @@ else()
      target_include_directories(nfd PRIVATE ${GTK3_INCLUDE_DIRS})
      target_link_libraries(nfd PUBLIC ${GTK3_LIBRARIES})
      target_include_directories(nfd PUBLIC "${TP}/nativefiledialog/src/include")
+
+
+else()
+
+ add_library(glfw3 STATIC
+	 "${TP}/glfw/src/context.c"
+	 "${TP}/glfw/src/init.c"
+	 "${TP}/glfw/src/input.c"
+	 "${TP}/glfw/src/monitor.c"
+	 "${TP}/glfw/src/platform.c"
+	 "${TP}/glfw/src/vulkan.c"
+	 "${TP}/glfw/src/window.c"
+	 "${TP}/glfw/src/egl_context.c"
+	 "${TP}/glfw/src/osmesa_context.c"
+	 "${TP}/glfw/src/null_init.c"
+	 "${TP}/glfw/src/null_monitor.c"
+	 "${TP}/glfw/src/null_window.c"
+	 "${TP}/glfw/src/null_joystick.c"
+	 "${TP}/glfw/src/posix_time.c"
+	 "${TP}/glfw/src/posix_thread.c"
+	 "${TP}/glfw/src/posix_module.c"
+	 "${TP}/glfw/src/posix_poll.c"
+	 "${TP}/glfw/src/cocoa_init.m"
+	 "${TP}/glfw/src/cocoa_joystick.m"
+	 "${TP}/glfw/src/cocoa_monitor.m"
+	 "${TP}/glfw/src/cocoa_window.m"
+	 "${TP}/glfw/src/nsgl_context.m")
+     target_include_directories(glfw3 PUBLIC "${TP}/glfw/include")
+     target_compile_definitions(glfw3 PRIVATE _GLFW_X11)
+     add_library(nfd STATIC "${TP}/nativefiledialog/src/nfd_cocoa.m")
+	 find_package(PkgConfig REQUIRED)
+     target_include_directories(nfd PUBLIC "${TP}/nativefiledialog/src/include")
+
+
 endif()
 
 if(MINGW)
