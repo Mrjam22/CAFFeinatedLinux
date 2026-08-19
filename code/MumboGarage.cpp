@@ -229,12 +229,12 @@ int mainWindowCode() {
 	// Setup our icons for the window.
 	GLFWimage images[2];
 
-	#ifdef _WIN32
+	#ifdef _MSVC
 	images[0] = LoadResourceImageToGLFWImage(IDB_PNG8, L"PNG"); // Small Icon
 	images[1] = LoadResourceImageToGLFWImage(IDB_PNG9, L"PNG"); // Large Icon
     #endif
 
-	#ifndef _WIN32
+	#ifndef _MSVC
 
 
 	int width, height, channels;
