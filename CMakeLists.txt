@@ -131,7 +131,8 @@ else()
      add_library(nfd STATIC "${TP}/nativefiledialog/src/nfd_cocoa.m")
 	 find_package(PkgConfig REQUIRED)
      target_include_directories(nfd PUBLIC "${TP}/nativefiledialog/src/include")
-     set(CMAKE_OSX_DEPLOYMENT_TARGET "13.0" CACHE STRING "Minimum macOS deployment target")
+     set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "Minimum macOS deployment target")
+	 set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64" CACHE STRING "Build architectures for macOS")
 
 
 endif()
@@ -237,8 +238,7 @@ if(NOT MSVC)
     target_link_libraries(CAFFeinated PRIVATE GL X11 Xi Xrandr Xinerama Xcursor rt m dl pthread dl)
   else()
       set(_GLFW_X11 1)
-	  target_link_libraries(CAFFeinated PRIVATE pthread dl)
-  endif()
+	  target_link_libraries(CAFFeinated PRIVATE pthread dl "-framework Cocoa" "-framework IOKit" "-framework CoreVideo" "-framework CoreFoundation" "-framework QuartzCore")
 endif()
 
 set_target_properties(CAFFeinated PROPERTIES
