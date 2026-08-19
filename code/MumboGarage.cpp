@@ -127,6 +127,18 @@
 
 #include "LoadingProcess.h"
 
+#ifndef _MSC_VER
+const unsigned char logo[] = {
+	#embed "../resource/icon.png"
+
+};
+
+const unsigned char logo_large[] = {
+	#embed "../resource/icon_large.png"
+
+};
+
+#endif
 
 // Permanent reference to the window so it can be fetched from anywhere.
 GLFWwindow* window;
@@ -240,19 +252,22 @@ int32_t mainWindowCode() {
 	// Setup our icons for the window.
 	GLFWimage images[2];
 
-	#ifdef _MSVC
+	#ifdef _MSC_VER
 	images[0] = LoadResourceImageToGLFWImage(IDB_PNG8, L"PNG"); // Small Icon
 	images[1] = LoadResourceImageToGLFWImage(IDB_PNG9, L"PNG"); // Large Icon
+
+
+	glfwSetWindowIcon(window, 2, images);
     #endif
 
-	#ifndef _MSVC
+	#ifndef  _MSC_VER
 
 
 	int width, height, channels;
-	unsigned char* data = stbi_load("./resource/icon.png", &width, &height, &channels, 4);
+	unsigned char* data = stbi_load_from_memory(logo,sizeof(logo), &width, &height, &channels,4);
 
 	int width2, height2, channels2;
-	unsigned char* data2 = stbi_load("./resource/icon_large.png", &width2, &height2, &channels2, 4);
+	unsigned char* data2 = stbi_load_from_memory(logo_large,sizeof(logo_large), &width2, &height2, &channels2,4);
 
 	if (data) {
 
@@ -261,7 +276,6 @@ int32_t mainWindowCode() {
 		icon.height = height;
 		icon.pixels = data;
 		images[0] = icon;
-		//stbi_image_free(data);
 	}
 
 	if (data2) {
@@ -271,13 +285,13 @@ int32_t mainWindowCode() {
 		icon2.height = height2;
 		icon2.pixels = data2;
 		images[1] = icon2;
-		//stbi_image_free(data2);
 
 	}
-
+    glfwSetWindowIcon(window, 2, images);
+	stbi_image_free(data);
+	stbi_image_free(data2);
 	#endif
 
-	glfwSetWindowIcon(window, 2, images);
 
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 	{
