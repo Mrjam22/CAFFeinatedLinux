@@ -212,13 +212,11 @@ elseif(APPLE)
 	 ${STB_HEADERS}
 	 ${RES_ASSETS}
 	 "${TP}/glad/src/glad.c")
-	 target_precompile_headers(CAFFeinated PRIVATE
-     <iostream>
-     <vector>
-     <string>
-     <memory>
-     <algorithm>
-    )
+    target_precompile_headers(CAFFeinated PRIVATE
+     <stdint.h>
+     <stdio.h>
+     <stdlib.h>
+     <string.h>)
 
 else()
   set_target_properties(glfw3 nfd zlibstatic squish PROPERTIES FOLDER "thirdparty")
