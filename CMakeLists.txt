@@ -202,6 +202,11 @@ if(MSVC)
 	 ${RES_ASSETS}
 	 "${TP}/glad/src/glad.c"
 	 MumboGarage.rc)
+	 target_precompile_headers(CAFFeinated PRIVATE
+     <stdint.h>
+     <stdio.h>
+     <stdlib.h>
+     <string.h>)
 elseif(APPLE)
   set_target_properties(glfw3 nfd zlibstatic squish PROPERTIES FOLDER "thirdparty")
   add_executable(CAFFeinated MACOSX_BUNDLE
