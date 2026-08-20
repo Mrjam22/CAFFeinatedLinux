@@ -1,15 +1,6 @@
 #pragma once
 #include <vector>
 
-#ifndef _MSC_VER
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <cstring>
-#endif
-
-
 enum CaffType : int32_t {
 	NONE = 0,
 	GHOUL_BUNDLE,

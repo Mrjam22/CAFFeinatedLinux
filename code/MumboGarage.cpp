@@ -10,43 +10,27 @@
 #ifdef NDEBUG
 #define IMGUI_DEBUG_PRINTF
 #define ASSERT(fmt, ...) ((void)0)
-#else
+#define PRINT(fmt, ...) ((void)0)
+
+
 #endif
+
+#ifdef _WIN32
+
+#define ASSERT(fmt, ...) (printf("%s %s %d - "##fmt,__FILE__, __func__, __LINE__, __VA_ARGS__))
+#define PRINT(fmt, ...) (printf(fmt, __VA_ARGS__))
+#else
+#define ASSERT(fmt, ...) (printf("%s %s %d - "#fmt,__FILE__, __func__, __LINE__, ##__VA_ARGS__))
+#define PRINT(fmt, ...) (printf(fmt, ##__VA_ARGS__))
+#define MAX_PATH PATH_MAX
+
+#endif
+
+
 
 #ifdef _WIN32 
-
-#define ASSERT(fmt, ...) (printf("%s %s %d - "#fmt,__FILE__, __func__, __LINE__, ##__VA_ARGS__))
-#define PRINT(fmt, ...) (printf(fmt, ##__VA_ARGS__))
-
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#endif
-
-
-#ifndef _WIN32
-
-#define ASSERT(fmt, ...) (printf("%s %s %d - "#fmt,__FILE__, __func__, __LINE__, ##__VA_ARGS__))
-#define PRINT(fmt, ...) (printf(fmt, ##__VA_ARGS__))
-
-
-//#define MAX_PATH PATH_MAX
-
-
-#define MAX_PATH 260
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <cstring>
-#include <stdint.h>
-#endif
-
-#ifndef _MSC_VER
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <cstring>
 #endif
 
 //Include all the necessary ImGui things we need.
@@ -125,25 +109,6 @@
 
 #include "LoadingProcess.h"
 
-#ifndef __APPLE__
-
-#ifndef _MSC_VER
-
-
-
-const unsigned char logo[] = {
-	#embed "../resource/icon.png"
-
-};
-
-const unsigned char logo_large[] = {
-	#embed "../resource/icon_large.png"
-
-};
-
-#endif
-
-#endif
 
 // Permanent reference to the window so it can be fetched from anywhere.
 GLFWwindow* window;
@@ -221,7 +186,7 @@ int32_t main() {
 /// <returns></returns>
 int32_t mainWindowCode() {
 	glfwInit();
-	printf("Size of wchar_t: %zu bytes\n", sizeof(wchar_t));
+
 	// Establish all our window hints.
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -229,13 +194,7 @@ int32_t mainWindowCode() {
 	glfwWindowHint(GLFW_SCALE_TO_MONITOR, GLFW_TRUE);
 	glfwWindowHint(GLFW_DOUBLEBUFFER, GLFW_TRUE);
 
-
-   	#ifndef _WIN32
-	glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_X11);
-    #endif
-
 	// Set the locale, this is needed for the wide-char/multi-byte conversions.
-
 	setlocale(LC_ALL, "en_US.UTF-8");
 
 	float main_scale = ImGui_ImplGlfw_GetContentScaleForMonitor(glfwGetPrimaryMonitor()); // Valid on GLFW 3.3+ only
@@ -255,50 +214,10 @@ int32_t mainWindowCode() {
 	glfwSetWindowSizeLimits(window, 960 * main_scale, 600 * main_scale, GLFW_DONT_CARE, GLFW_DONT_CARE); // Set a minimum size for the window. Don't care for maximum.
 
 	// Setup our icons for the window.
-	GLFWimage images[2];
-
-	#ifndef __APPLE__
-	#ifdef _MSC_VER
-	images[0] = LoadResourceImageToGLFWImage(IDB_PNG8, L"PNG"); // Small Icon
-	images[1] = LoadResourceImageToGLFWImage(IDB_PNG9, L"PNG"); // Large Icon
-
-
-	glfwSetWindowIcon(window, 2, images);
-    #endif
-
-	#ifndef  _MSC_VER
-
-
-	int width, height, channels;
-	unsigned char* data = stbi_load_from_memory(logo,sizeof(logo), &width, &height, &channels,4);
-
-	int width2, height2, channels2;
-	unsigned char* data2 = stbi_load_from_memory(logo_large,sizeof(logo_large), &width2, &height2, &channels2,4);
-
-	if (data) {
-
-		GLFWimage icon;
-		icon.width = width;
-		icon.height = height;
-		icon.pixels = data;
-		images[0] = icon;
-	}
-
-	if (data2) {
-
-		GLFWimage icon2;
-		icon2.width = width2;
-		icon2.height = height2;
-		icon2.pixels = data2;
-		images[1] = icon2;
-
-	}
-    glfwSetWindowIcon(window, 2, images);
-	stbi_image_free(data);
-	stbi_image_free(data2);
-	#endif
-
-    #endif
+	//GLFWimage images[2];
+	//images[0] = LoadResourceImageToGLFWImage(IDB_PNG8, L"PNG"); // Small Icon
+	//images[1] = LoadResourceImageToGLFWImage(IDB_PNG9, L"PNG"); // Large Icon
+	//glfwSetWindowIcon(window, 2, images);
 
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 	{
@@ -324,20 +243,20 @@ int32_t mainWindowCode() {
 	//RC_PNG_ANIMICON = LoadResourceImage(IDB_PNG1, L"PNG");
 	//RC_PNG2 = LoadResourceImage(IDB_PNG2, L"PNG");
 	//RC_PNG_VEHICON = LoadResourceImage(IDB_PNG3, L"PNG");
-//	RC_PNG_VEHBLOCKICON = LoadResourceImage(IDB_PNG4, L"PNG");
-//	RC_PNG_AUDIOICON = LoadResourceImage(IDB_PNG5, L"PNG");
-//	RC_PNG_LISTICON = LoadResourceImage(IDB_PNG6, L"PNG");
-//	RC_PNG_CHALICON = LoadResourceImage(IDB_PNG7, L"PNG");
-//	RC_PNG_HAVOKICON = LoadResourceImage(IDB_PNG10, L"PNG");
+	//RC_PNG_VEHBLOCKICON = LoadResourceImage(IDB_PNG4, L"PNG");
+	//RC_PNG_AUDIOICON = LoadResourceImage(IDB_PNG5, L"PNG");
+	//RC_PNG_LISTICON = LoadResourceImage(IDB_PNG6, L"PNG");
+	//RC_PNG_CHALICON = LoadResourceImage(IDB_PNG7, L"PNG");
+	//RC_PNG_HAVOKICON = LoadResourceImage(IDB_PNG10, L"PNG");
 
 	//LoadResourceFont(IDR_FONT1, RT_FONT, 1.25f); // Japanese Font (NotoSansJP)
-//	LoadResourceFont(IDR_FONT2, RT_FONT, 1.25f); // Korean Font (NotoSansKR)
+	//LoadResourceFont(IDR_FONT2, RT_FONT, 1.25f); // Korean Font (NotoSansKR)
 
 	imGuiWindowInfo.search = new char[128];
 	GetVehicleEditorWindowParameters()->vehicleBlockAddParams.outputPath = (char*)malloc(MAX_PATH);
 	memset(imGuiWindowInfo.search, 0, 128);
 	bundleSetup.bufferedSaves = (BufferedSave*)malloc(0);
-	getLoctextWindowParams()->loctextFilePath = new char[260];
+	getLoctextWindowParams()->loctextFilePath = new char[MAX_PATH];
 
 	NFD_Init();
 
@@ -771,7 +690,7 @@ static void ShowMenuFile()
 		nfdchar_t* saveFile = new char[MAX_PATH];
 
 		nfdchar_t filename[256];
-		char* end = strrchr(currentFileName,'/');
+		char* end = strrchr(currentFileName, '\\');
 		int32_t strLen = strlen(currentFileName);
 		int32_t remainLeft = strLen - (end - currentFileName);
 
@@ -861,7 +780,7 @@ void exportFilesFromBundleRaw() {
 
 				//All (properly named) texture files end with "\default.rtx". Filter that out as well.
 				if (strcmp(type, "texture") == 0) {
-					strtok(lbl, "/");
+					strtok(lbl, "\\");
 				}
 
 				char* buf = (char*)malloc(1024);
@@ -928,26 +847,26 @@ void exportFilesFromBundleRaw() {
 						tokCount -= strlen("XENONBETA_v1\\");
 					}
 
-					char* tok = strtok(charBuffer,"/");
+					char* tok = strtok(charBuffer, "\\");
 
 					int32_t curLen = 0;
 					while (curLen < tokCount - strlen(lbl)) {
-						strcat(buf,"/");
+						strcat(buf, "\\");
 						strcat(buf, tok);
 						std::filesystem::create_directory(buf);
 
 						PRINT("%s\n", tok);
 
-						tok = strtok(NULL,"/");
+						tok = strtok(NULL, "\\");
 
 						PRINT("%d - %d\n", curLen, tokCount);
-						curLen += strcspn(bundleFile.V31Bundle->fileInfoTable.debugTable.fileNames[i] + 0x1A + curLen,"/") + 1;
+						curLen += strcspn(bundleFile.V31Bundle->fileInfoTable.debugTable.fileNames[i] + 0x1A + curLen, "\\") + 1;
 					}
 
 					free(charBuffer);
 				}
 
-				strcat(buf,"/");
+				strcat(buf, "\\");
 				strcat(buf, lbl);
 
 				FILE* writeFile = fopen(buf, "wb");
@@ -1024,7 +943,7 @@ void exportFilesFromBundleSpecial() {
 
 				// All (properly named) texture files end with "\default.rtx". Filter that out as well.
 				if (strcmp(type, "texture") == 0) {
-					strtok(lbl,"/");
+					strtok(lbl, "\\");
 				}
 
 				char* buf = (char*)malloc(1024);
@@ -1503,7 +1422,7 @@ void displayActiveFileProperty() {
 		}
 
 		if (strchr(lbl, '\\') != NULL) {
-			strtok(lbl,"/");
+			strtok(lbl, "\\");
 		}
 
 		float pos = ImGui::GetCursorPosY();
@@ -1582,7 +1501,7 @@ void displayActiveFileProperty() {
 				assetGetTypeFromString(lbl + 4, type);
 
 				if (strcmp(type, "texture") == 0) {
-					strtok(lbl,"/");
+					strtok(lbl, "\\");
 				}
 
 				strcat(file, lbl);
@@ -2066,7 +1985,7 @@ void displayActiveBundleV31Property() {
 									strcat(nameBuffer, tok);
 									std::filesystem::create_directory(nameBuffer);
 
-									strcat(nameBuffer,"/");
+									strcat(nameBuffer, "\\");
 									tok = strtok(NULL, "_");
 								}
 
@@ -3188,7 +3107,7 @@ void fillBundleFileList() {
 
 		//All (properly named) texture files end with "\default.rtx". Filter that out as well.
 		if (strcmp(type, "texture") == 0) {
-			strtok(lbl,"/");
+			strtok(lbl, "\\");
 		}
 
 		GLuint img = 0;
@@ -3458,7 +3377,7 @@ void fillStreamBundleFileList() {
 
 			//All (properly named) texture files end with "\default.rtx". Filter that out as well.
 			if (strcmp(type, "texture") == 0) {
-				strtok(lbl,"/");
+				strtok(lbl, "\\");
 			}
 
 			if (ImGui::Button(lbl)) {
@@ -3544,7 +3463,7 @@ void fillStreamBundleFileListOfBundle() {
 
 		//All (properly named) texture files end with "\default.rtx". Filter that out as well.
 		if (strcmp(type, "texture") == 0) {
-			strtok(lbl,"/");
+			strtok(lbl, "\\");
 		}
 
 		GLuint img = 0;
@@ -3707,7 +3626,7 @@ void fillGhouliesBundleFileList() {
 
 		//All (properly named) texture files end with "\default.rtx". Filter that out as well.
 		if (strcmp(type, "texture") == 0) {
-			strtok(lbl,"/");
+			strtok(lbl, "\\");
 		}
 
 		if (ImGui::Selectable(lbl, fileIdx == i + 1)) {
@@ -4769,7 +4688,6 @@ static void openLoadSaveFile() {
 /// <param name="resourceType">The type of the resource.</param>
 /// <param name="extraScale">Optional. Extra scaling to apply to the font if needed.</param>
 /// <returns>A pointer to the created ImFont object.</returns>
-
 static ImFont* LoadResourceFont(int32_t resourceName, const wchar_t* resourceType, float extraScale = 1) {
 	// HRESULT hr = S_OK;
  //
@@ -4833,7 +4751,6 @@ static ImFont* LoadResourceFont(int32_t resourceName, const wchar_t* resourceTyp
 	// }
  //
 	// return ImGui::GetIO().Fonts->AddFontFromMemoryTTF(fontFile, (int)imageFileSize, 0.f, &cfg);
-
 }
 
 static unsigned char* GetRawImageData_Base(char* data, int32_t width, int32_t height, int32_t type) {
@@ -5209,120 +5126,117 @@ static GLuint LoadImageFromData(unsigned char* data, int32_t width, int32_t heig
 /// <param name="resourceName"></param>
 /// <param name="resourceType"></param>
 /// <returns>If successful, the target of the texture.</returns>
-
-#ifdef _WIN32
 static GLuint LoadResourceImage(int32_t resourceName, const wchar_t* resourceType) {
-	HRESULT hr = S_OK;
-
-	// Resource management.
-	HRSRC imageResHandle = NULL;
-	HGLOBAL imageResDataHandle = NULL;
-	unsigned char* pImageFile = NULL;
-	DWORD imageFileSize = 0;
-
-	// Locate the resource in the application's executable.
-	imageResHandle = FindResource(
-		NULL,             // This component.
-		MAKEINTRESOURCE(resourceName),   // Resource name.
-		resourceType);        // Resource type.
-
-	hr = (imageResHandle ? S_OK : E_FAIL);
-
-	// Load the resource to the HGLOBAL.
-	if (SUCCEEDED(hr)) {
-		imageResDataHandle = LoadResource(NULL, imageResHandle);
-		hr = (imageResDataHandle ? S_OK : E_FAIL);
-	}
-
-	// Lock the resource to retrieve memory pointer.
-	if (SUCCEEDED(hr)) {
-		pImageFile = (unsigned char*)LockResource(imageResDataHandle);
-		hr = (pImageFile ? S_OK : E_FAIL);
-	}
-
-	// Calculate the size.
-	if (SUCCEEDED(hr)) {
-		imageFileSize = SizeofResource(NULL, imageResHandle);
-		hr = (imageFileSize ? S_OK : E_FAIL);
-	}
-
-	GLuint tex;
-	int32_t w;
-	int32_t h;
-	int32_t comp;
-	unsigned char* image = stbi_load_from_memory(pImageFile, imageFileSize, &w, &h, &comp, STBI_rgb_alpha);
-
-	if (image == nullptr)
-		throw(std::string("Failed to load texture"));
-
-	glGenTextures(1, &tex);
-
-	glBindTexture(GL_TEXTURE_2D, tex);
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
-
-	glBindTexture(GL_TEXTURE_2D, 0);
-
-	stbi_image_free(image);
-
-	return tex;
+	// HRESULT hr = S_OK;
+ //
+	// // Resource management.
+	// HRSRC imageResHandle = NULL;
+	// HGLOBAL imageResDataHandle = NULL;
+	// unsigned char* pImageFile = NULL;
+	// DWORD imageFileSize = 0;
+ //
+	// // Locate the resource in the application's executable.
+	// imageResHandle = FindResource(
+	// 	NULL,             // This component.
+	// 	MAKEINTRESOURCE(resourceName),   // Resource name.
+	// 	resourceType);        // Resource type.
+ //
+	// hr = (imageResHandle ? S_OK : E_FAIL);
+ //
+	// // Load the resource to the HGLOBAL.
+	// if (SUCCEEDED(hr)) {
+	// 	imageResDataHandle = LoadResource(NULL, imageResHandle);
+	// 	hr = (imageResDataHandle ? S_OK : E_FAIL);
+	// }
+ //
+	// // Lock the resource to retrieve memory pointer.
+	// if (SUCCEEDED(hr)) {
+	// 	pImageFile = (unsigned char*)LockResource(imageResDataHandle);
+	// 	hr = (pImageFile ? S_OK : E_FAIL);
+	// }
+ //
+	// // Calculate the size.
+	// if (SUCCEEDED(hr)) {
+	// 	imageFileSize = SizeofResource(NULL, imageResHandle);
+	// 	hr = (imageFileSize ? S_OK : E_FAIL);
+	// }
+ //
+	// GLuint tex;
+	// int32_t w;
+	// int32_t h;
+	// int32_t comp;
+	// unsigned char* image = stbi_load_from_memory(pImageFile, imageFileSize, &w, &h, &comp, STBI_rgb_alpha);
+ //
+	// if (image == nullptr)
+	// 	throw(std::string("Failed to load texture"));
+ //
+	// glGenTextures(1, &tex);
+ //
+	// glBindTexture(GL_TEXTURE_2D, tex);
+ //
+	// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+ //
+	// glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
+ //
+	// glBindTexture(GL_TEXTURE_2D, 0);
+ //
+	// stbi_image_free(image);
+ //
+	// return tex;
 }
 
 static GLFWimage LoadResourceImageToGLFWImage(int32_t resourceName, const wchar_t* resourceType) {
-	HRESULT hr = S_OK;
-
-	// Resource management.
-	HRSRC imageResHandle = NULL;
-	HGLOBAL imageResDataHandle = NULL;
-	unsigned char* pImageFile = NULL;
-	DWORD imageFileSize = 0;
-
-	// Locate the resource in the application's executable.
-	imageResHandle = FindResource(
-		NULL,             // This component.
-		MAKEINTRESOURCE(resourceName),   // Resource name.
-		resourceType);        // Resource type.
-
-	hr = (imageResHandle ? S_OK : E_FAIL);
-
-	// Load the resource to the HGLOBAL.
-	if (SUCCEEDED(hr)) {
-		imageResDataHandle = LoadResource(NULL, imageResHandle);
-		hr = (imageResDataHandle ? S_OK : E_FAIL);
-	}
-
-	// Lock the resource to retrieve memory pointer.
-	if (SUCCEEDED(hr)) {
-		pImageFile = (unsigned char*)LockResource(imageResDataHandle);
-		hr = (pImageFile ? S_OK : E_FAIL);
-	}
-
-	// Calculate the size.
-	if (SUCCEEDED(hr)) {
-		imageFileSize = SizeofResource(NULL, imageResHandle);
-		hr = (imageFileSize ? S_OK : E_FAIL);
-	}
-
-	GLuint tex;
-	int32_t w;
-	int32_t h;
-	int32_t comp;
-	unsigned char* image = stbi_load_from_memory(pImageFile, imageFileSize, &w, &h, &comp, STBI_rgb_alpha);
-
-	if (image == nullptr)
-		throw(std::string("Failed to load texture"));
-
-	GLFWimage img;
-	img.height = h;
-	img.width = w;
-	img.pixels = image;
-
-	return img;
+	// HRESULT hr = S_OK;
+ //
+	// // Resource management.
+	// HRSRC imageResHandle = NULL;
+	// HGLOBAL imageResDataHandle = NULL;
+	// unsigned char* pImageFile = NULL;
+	// DWORD imageFileSize = 0;
+ //
+	// // Locate the resource in the application's executable.
+	// imageResHandle = FindResource(
+	// 	NULL,             // This component.
+	// 	MAKEINTRESOURCE(resourceName),   // Resource name.
+	// 	resourceType);        // Resource type.
+ //
+	// hr = (imageResHandle ? S_OK : E_FAIL);
+ //
+	// // Load the resource to the HGLOBAL.
+	// if (SUCCEEDED(hr)) {
+	// 	imageResDataHandle = LoadResource(NULL, imageResHandle);
+	// 	hr = (imageResDataHandle ? S_OK : E_FAIL);
+	// }
+ //
+	// // Lock the resource to retrieve memory pointer.
+	// if (SUCCEEDED(hr)) {
+	// 	pImageFile = (unsigned char*)LockResource(imageResDataHandle);
+	// 	hr = (pImageFile ? S_OK : E_FAIL);
+	// }
+ //
+	// // Calculate the size.
+	// if (SUCCEEDED(hr)) {
+	// 	imageFileSize = SizeofResource(NULL, imageResHandle);
+	// 	hr = (imageFileSize ? S_OK : E_FAIL);
+	// }
+ //
+	// GLuint tex;
+	// int32_t w;
+	// int32_t h;
+	// int32_t comp;
+	// unsigned char* image = stbi_load_from_memory(pImageFile, imageFileSize, &w, &h, &comp, STBI_rgb_alpha);
+ //
+	// if (image == nullptr)
+	// 	throw(std::string("Failed to load texture"));
+ //
+	// GLFWimage img;
+	// img.height = h;
+	// img.width = w;
+	// img.pixels = image;
+ //
+	// return img;
 }
-#endif
 
 // GLFW
 void framebuffer_size_callback(GLFWwindow* window, int32_t width, int32_t height)

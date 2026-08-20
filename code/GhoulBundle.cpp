@@ -1,13 +1,6 @@
 #include "CommonReader.h"
 #include "GhoulBundle.h"
 
-#ifndef _WIN32
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <cstring>
-#endif
-
 FileEntry::~FileEntry() {
 	memset(fileName, 0, FILEENTRY_NAMESIZE);
 }

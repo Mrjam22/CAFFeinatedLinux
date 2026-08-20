@@ -9,13 +9,6 @@
 #include "MessageHandle.h"
 #endif
 
-#ifndef _WIN32
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <cstring>
-#endif
-
 char title[256];
 ErrorPrompt errorPromptParams;
 
@@ -27,6 +20,7 @@ void FireMessage(const char* message, ErrorType severity) {
 	errorPromptParams.errorSeverity = severity;
 
 	memset(title, 0, 256);
+
 	if (severity == ErrorType_None) {
 		CloseMessage();
 		return;
@@ -35,23 +29,26 @@ void FireMessage(const char* message, ErrorType severity) {
 	if (severity == ErrorType_Info) {
 		strcpy(title, "Informational Message");
 		//MessageBeep(MB_ICONINFORMATION);
+		printf("\7");
 	}
 
 	if (severity == ErrorType_Warn) {
 		strcpy(title, "Warning Message");
 		//MessageBeep(MB_ICONEXCLAMATION);
+		printf("\7");
 	}
 
 	if (severity == ErrorType_Error) {
 		strcpy(title, "Error Message");
 		//MessageBeep(MB_ICONERROR);
+		printf("\7");
 	}
 
 	if (severity == ErrorType_Critical) {
 		strcpy(title, "Critical Message");
 		//MessageBeep(MB_ICONERROR);
+		printf("\7");
 	}
-
 
 	errorPromptParams.showErrorPrompt = true;
 }

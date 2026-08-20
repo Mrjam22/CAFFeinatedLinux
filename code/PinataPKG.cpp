@@ -1,15 +1,6 @@
 #include "PinataPKG.h"
 #include "Bundle.h"
 
-
-#ifndef _MSC_VER
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <cstring>
-#endif
-
 namespace Pinata {
 	bool PKGFile::readStandaloneDbBundleFiles(char* filePath) {
 		FILE* currentFile = fopen(filePath, "rb");

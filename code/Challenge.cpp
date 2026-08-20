@@ -1,13 +1,6 @@
 #include "Challenge.h"
 #include "CommonReader.h"
 
-#ifndef _WIN32
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <cstring>
-#endif
-
 void ChallengeNullDef::ParseHeader(char* data) {
 	int idVar = 0;
 	int unk1Var = 0;

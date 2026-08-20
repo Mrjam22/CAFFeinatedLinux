@@ -2,13 +2,6 @@
 #include "CommonReader.h"
 #include "DarkPackage.h"
 
-#ifndef _WIN32
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <cstring>
-#endif
-
 void DarkPackageFile::ReadPackageFile(char* data, char byteswap) {
 	if (data == nullptr) {
 		return;

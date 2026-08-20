@@ -5,14 +5,6 @@
 #include "CommonReader.h"
 #include <nfd.h>
 
-
-#ifndef _WIN32
-#include <stdio.h>
-#include <wchar.h>
-#include <stdlib.h>
-#include <string.h>
-#endif
-
 #ifndef VEHICLE_WINDOW
 #include "VehicleWindow.h"
 #endif

@@ -3,18 +3,13 @@
 #include "CommonReader.h"
 #include "AssetCommons.h"
 
+#ifndef _WIN32
+
+#define MAX_PATH PATH_MAX
+#endif
+
 #include <nfd.h>
 #include <thread>
-
-
-
-#ifndef _WIN32
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <cstring>
-#define MAX_PATH 260
-#endif
 
 #include "LoctextWindow.h"
 

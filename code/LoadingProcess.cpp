@@ -1,13 +1,6 @@
 #include "imgui_includes.h"
 #include "LoadingProcess.h"
 
-#ifndef _WIN32
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <cstring>
-#endif
-
 LoadingPrompt loadingWidgetParams;
 LoadingBarPrompt loadingBarWidgetParams;
 

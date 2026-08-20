@@ -2,13 +2,6 @@
 #include "CommonReader.h"
 #include "KameoDatabase.h"
 
-#ifndef _WIN32
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <cstring>
-#endif
-
 void KameoDBFile::ReadDatabaseFile(char* data, char byteswap) {
 	if (data == nullptr) {
 		return;

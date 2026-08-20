@@ -101,6 +101,7 @@ elseif(LINUX)
      target_include_directories(nfd PUBLIC "${TP}/nativefiledialog/src/include")
 
 
+
 else()
 
  add_library(glfw3 STATIC
@@ -211,6 +212,13 @@ elseif(APPLE)
 	 ${STB_HEADERS}
 	 ${RES_ASSETS}
 	 "${TP}/glad/src/glad.c")
+	 target_precompile_headers(CAFFeinated PRIVATE
+     <iostream>
+     <vector>
+     <string>
+     <memory>
+     <algorithm>
+    )
 
 else()
   set_target_properties(glfw3 nfd zlibstatic squish PROPERTIES FOLDER "thirdparty")
@@ -222,6 +230,11 @@ else()
 	 ${STB_HEADERS}
 	 ${RES_ASSETS}
 	 "${TP}/glad/src/glad.c")
+    target_precompile_headers(CAFFeinated PRIVATE
+     <stdint.h>
+     <stdio.h>
+     <stdlib.h>
+     <string.h>)
 endif()
 
 if(APPLE)

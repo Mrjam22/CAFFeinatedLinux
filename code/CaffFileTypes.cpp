@@ -1,17 +1,9 @@
 #include "CommonReader.h"
 
-#ifdef _WIN32
+#ifdef _WIN32 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #endif
-
-#ifndef _WIN32
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <cstring>
-#endif
-
 
 #include "CaffFileTypes.h"
 
@@ -40,11 +32,11 @@ void Script::ReadScript(char* data) {
 		type = flipEndian(type);
 
 		switch (type) {
-			case dbScript_Condition_End:
+		    case dbScript_Condition_End:
 			case dbScript_Logic_Else:
 			case dbScript_Logic_Endif: {
 				indention--;
-			}
+		    }
 		}
 
 		for (int32_t i = 0; i < indention; i++) {
@@ -52,9 +44,9 @@ void Script::ReadScript(char* data) {
 		}
 
 		switch (type) {
-			case dbScript_Condition_TimeOut:
-			case dbScript_Condition_NumberGhouliesAlive:
-			case dbScript_Condition_ObjectPickedUp:
+		    case dbScript_Condition_TimeOut:
+		    case dbScript_Condition_NumberGhouliesAlive:
+		    case dbScript_Condition_ObjectPickedUp:
 			case dbScript_Condition_NumberGhouliesKilled:
 			case dbScript_Condition_NumberOfKnockdowns:
 			case dbScript_Condition_ActorEntersRegion:
@@ -78,20 +70,20 @@ void Script::ReadScript(char* data) {
 			case dbScript_Condition_CounterGreaterThan:
 			case dbScript_Logic_IfRandomFloatLessThanOrEqualsProb:
 			case dbScript_Logic_Else: {
-				indention++;
-			}
+			    indention++;
+		    }
 		}
 
 		printf("Script Entry %d = <%d - %s>", count, size, dbScriptNames[type]);
 		switch (type) {
-			case dbScript_Debug_Printf: {
+		    case dbScript_Debug_Printf: {
 				char msg[256];
 				memset(msg, 0, 256);
 
 				strncpy(msg, scriptPtr + pos + 8, 256);
 
 				printf(" (%s)\n", msg);
-			}
+		    }
 			break;
 			case dbScript_Condition_IfGameFlag:
 			case dbScript_Logic_IfGameflag:
@@ -136,7 +128,7 @@ void Script::ReadScript(char* data) {
 			}
 			break;
 		}
-
+		
 
 		pos += size;
 		count++;
@@ -283,7 +275,6 @@ void Loctext::ReadLabelData() {
 
 	int32_t dataOffs = 0;
 	int32_t dataSize = 6;
-
 	
 	if (labelTable.header.magic[0] == LOCTEXT_LSBL[0] && labelTable.header.magic[1] == LOCTEXT_LSBL[1] && labelTable.header.magic[2] == LOCTEXT_LSBL[2] && labelTable.header.magic[3] == LOCTEXT_LSBL[3]) {
 		endianness = SRC_ENDIANLITTLE;
@@ -360,22 +351,22 @@ void Loctext::ReadLabelData() {
 			int32_t strOffsetVar; // 0x2 (0x4 on LSB2 W/ no Tag Table.)
 
 			/*if (labelTable.header.magic == LOCTEXT_LSBTWO_MAGIC) {
-			 *			if (labelTable.header.tagTableOffset == 0) {
-			 *				memcpy(&strUnkVal, loctextPtr + strInfoOffset + (dataSize * i), sizeof(int16_t));
-			 *				memcpy(&strIdVar, loctextPtr + strInfoOffset + (dataSize * i) + 2, sizeof(int16_t));
-			 *				memcpy(&strOffsetVar, loctextPtr + strInfoOffset + (dataSize * i) + 4, sizeof(int32_t));
-			 *
-			 *				labelTable.stringTable.infoEntries[i].unk = flipEndian(strUnkVal);
-		}
-		else {
-			memcpy(&strIdVar, loctextPtr + strInfoOffset + (dataSize * i), sizeof(int16_t));
-			memcpy(&strOffsetVar, loctextPtr + strInfoOffset + (dataSize * i) + 2, sizeof(int32_t));
-		}
-		}
-		else {
-			memcpy(&strIdVar, loctextPtr + strInfoOffset + (dataSize * i), sizeof(int16_t));
-			memcpy(&strOffsetVar, loctextPtr + strInfoOffset + (dataSize * i) + 2, sizeof(int32_t));
-		}*/
+				if (labelTable.header.tagTableOffset == 0) {
+					memcpy(&strUnkVal, loctextPtr + strInfoOffset + (dataSize * i), sizeof(int16_t));
+					memcpy(&strIdVar, loctextPtr + strInfoOffset + (dataSize * i) + 2, sizeof(int16_t));
+					memcpy(&strOffsetVar, loctextPtr + strInfoOffset + (dataSize * i) + 4, sizeof(int32_t));
+
+					labelTable.stringTable.infoEntries[i].unk = flipEndian(strUnkVal);
+				}
+				else {
+					memcpy(&strIdVar, loctextPtr + strInfoOffset + (dataSize * i), sizeof(int16_t));
+					memcpy(&strOffsetVar, loctextPtr + strInfoOffset + (dataSize * i) + 2, sizeof(int32_t));
+				}
+			}
+			else {
+				memcpy(&strIdVar, loctextPtr + strInfoOffset + (dataSize * i), sizeof(int16_t));
+				memcpy(&strOffsetVar, loctextPtr + strInfoOffset + (dataSize * i) + 2, sizeof(int32_t));
+			}*/
 
 			memcpy(&strIdVar, loctextPtr + strInfoOffset + (dataSize * i), sizeof(int16_t));
 			memcpy(&strOffsetVar, loctextPtr + strInfoOffset + (dataSize * i) + 2, sizeof(int32_t));
@@ -423,8 +414,8 @@ void Loctext::ReadTagData() {
 	bool doesEndMatter = false;
 
 	/*if (labelTable.header.magic == LOCTEXT_LSBTWO_MAGIC) {
-	 *	doesEndMatter = true;
-}*/
+		doesEndMatter = true;
+	}*/
 
 	if (doesEndMatter) {
 		int32_t totalSectLen = 0;
@@ -451,7 +442,7 @@ void Loctext::ReadTagData() {
 
 			labelTable.tagTable.infoEntries[i].id = flipEndian(id);
 			labelTable.tagTable.infoEntries[i].unk1 = flipEndian(unk1);
-			labelTable.tagTable.infoEntries[i].offset = flipEndian(offset);
+				labelTable.tagTable.infoEntries[i].offset = flipEndian(offset);
 
 			printf("Tag Table Entry %d: %04x %04x %d\n", i, labelTable.tagTable.infoEntries[i].id, labelTable.tagTable.infoEntries[i].unk1, labelTable.tagTable.infoEntries[i].offset);
 		}
@@ -502,8 +493,8 @@ void Loctext::ReadCommentData() {
 	bool doesEndMatter = false;
 
 	/*if (labelTable.header.magic == LOCTEXT_LSBTWO_MAGIC) {
-	 *	doesEndMatter = true;
-}*/
+		doesEndMatter = true;
+	}*/
 
 	if (doesEndMatter) {
 		int32_t sectLen = 0;
@@ -580,8 +571,8 @@ void Loctext::ReadPosData() {
 	bool doesEndMatter = false;
 
 	/*if (labelTable.header.magic == LOCTEXT_LSBTWO_MAGIC) {
-	 *	doesEndMatter = true;
-}*/
+		doesEndMatter = true;
+	}*/
 
 	if (doesEndMatter) {
 		int32_t sectLen = 0;
@@ -678,7 +669,7 @@ void Loctext::ExportToFileRaw(char* fileName) {
 				char conv[2048];
 
 				int32_t total = wcstombs(conv, labelTable.stringTable.strings[GetIdxOfConnectedString(idx)].string, 2048);
-
+				
 				// If a comment doesn't have a new line, apply one before we write our next value. Otherwise just write as normal.
 				if (hasCommentGotNewLine) {
 					sprintf(fullStr, "%s\t\t\t= \"%s\"\n", labelTable.tagTable.tags[GetIdxOfConnectedTag(idx)].val, conv);
@@ -897,7 +888,7 @@ void Loctext::WriteLoctext(char* filename) {
 			int32_t lastOffs = flipEndian(currOffset);
 			fwrite(&lastOffs, 4, 1, writeStrm);
 		}
-
+		
 		for (int32_t i = 0; i < labelTable.stringTable.header.totalCount; i++) {
 			if (endianness == SRC_ENDIANLITTLE) {
 				fwrite(&labelTable.stringTable.strings[i].string, 2, wcslen(labelTable.stringTable.strings[i].string) + 1, writeStrm);
@@ -2027,7 +2018,7 @@ void Texture::ReadTextureInfo(char* data) {
 
 	if (frameCount != 0) {
 		headerSect.gpuOffsTable = new int32_t[frameCount];
-
+		
 		for (int32_t i = 0; i < frameCount; i++) {
 			int32_t off = 0;
 
