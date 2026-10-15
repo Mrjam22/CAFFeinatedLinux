@@ -15,7 +15,7 @@ Currently supports the parsing and exporting from the following games:
 | Kinect Sports | Supports the uncompressed V40 bundle files. |
 
 ## Usage
-This tool does somewhat expect that you have a basic understanding of the files you are looking at beforehand.<br/>
+This tool does expect that you have a basic understanding of the files you are looking at beforehand.<br/>
 To open a file with the executable, go <b>File -> Open</b>, there will be a list of available options to pick from. 
 | File Option  | Description |
 | ------------- | ------------- |
@@ -42,9 +42,14 @@ A few tool windows are present in this, for different purposes.
 ## Contact
 If you need to contact me regarding anything, you can contact me via Discord (@oliegamertv, I'm most active there) or the Issues tab.
 
-## Disclaimer
+## Disclaimers
 <b>This tool is intended for educational and research purposes only. Use at your own discretion.</b><br/>
-Distribution or usage of ripped/modified game files may violate Microsoft's Terms of Service.
+Distribution or usage of ripped/modified game files may violate Microsoft's Terms of Service.<br/>
+This is an unofficial fan project. It is not affiliated with or endorsed by Microsoft and Rare. 
+
+----
+<b>This project is entirely human-made. No AI has or will be used for this.</b><br/>
+Any pull requests that have had Generative AI used for it will be rejected. (I don't have the energy to validate everything it spits out)
 
 ## Libraries Used
 * GLAD & GLFW
