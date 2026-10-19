@@ -1,5 +1,6 @@
 #include "CommonReader.h"
 #include "GhoulBundle.h"
+#include "LoadingProcess.h"
 
 FileEntry::~FileEntry() {
 	memset(fileName, 0, FILEENTRY_NAMESIZE);
@@ -55,6 +56,7 @@ bool GhoulBundle::ReadBundleFile(char* data, size_t dataSize) {
 		dataPtr = uncompedBaseData;
 
 		fileEntries = new FileEntry[entryCount];
+		dirtyFiles = new DirtyFile[entryCount];
 
 		if (fileEntries == nullptr)
 			return false;
@@ -69,8 +71,22 @@ bool GhoulBundle::ReadBundleFile(char* data, size_t dataSize) {
 
 			memcpy(&fileEntries[i].dataSectOffset, dataPtr + fileListOffset + (sizeof(FileEntry) * i) + FILEENTRY_NAMESIZE + 0x10, sizeof(int32_t));
 			memcpy(&fileEntries[i].dataSectSize, dataPtr + fileListOffset + (sizeof(FileEntry) * i) + FILEENTRY_NAMESIZE + 0x14, sizeof(int32_t));
-			memcpy(&fileEntries[i].gpuSectOffset, dataPtr + fileListOffset + (sizeof(FileEntry) * i) + FILEENTRY_NAMESIZE + 0x18, sizeof(int32_t));
-			memcpy(&fileEntries[i].gpuSectSize, dataPtr + fileListOffset + (sizeof(FileEntry) * i) + FILEENTRY_NAMESIZE + 0x1C, sizeof(int32_t));
+			memcpy(&fileEntries[i].gpuListOffset, dataPtr + fileListOffset + (sizeof(FileEntry) * i) + FILEENTRY_NAMESIZE + 0x18, sizeof(int32_t));
+			memcpy(&fileEntries[i].gpuSectAndListSize, dataPtr + fileListOffset + (sizeof(FileEntry) * i) + FILEENTRY_NAMESIZE + 0x1C, sizeof(int32_t));
+
+			gpuList.emplace_back();
+
+			// These have GPU sections.
+			if (fileEntries[i].type == 0x4 || fileEntries[i].type == 0x1) {
+				memcpy(&gpuList[i].tableSize, dataPtr + gpuListOffset + fileEntries[i].gpuListOffset, sizeof(int32_t));
+				memcpy(&gpuList[i].entryCount, dataPtr + gpuListOffset + fileEntries[i].gpuListOffset + 4, sizeof(int32_t));
+				gpuList[i].offsets = new OffsetSet[gpuList[i].entryCount];
+				dirtyFiles[i].gpuSects = new DirtyGpuSect[gpuList[i].entryCount];
+				for (int32_t k = 0; k < gpuList[i].entryCount; k++) {
+					memcpy(&gpuList[i].offsets[k].offset, dataPtr + gpuListOffset + fileEntries[i].gpuListOffset + 8 + (8 * k), sizeof(int32_t));
+					memcpy(&gpuList[i].offsets[k].size, dataPtr + gpuListOffset + fileEntries[i].gpuListOffset + 12 + (8 * k), sizeof(int32_t));
+				}
+			}
 		}
 
 		isReady = true;
@@ -112,8 +128,189 @@ void GhoulBundle::ClearBundleFileData() {
 		fileEntries = nullptr;
 	}
 
+	gpuList.clear();
+
+	if (dirtyFiles != nullptr) {
+		delete[] dirtyFiles;
+		dirtyFiles = nullptr;
+	}
+
 	if (dataPtr != nullptr) {
 		free(dataPtr);
 		dataPtr = nullptr;
 	}
+}
+
+void GhoulBundle::writeToFile(const char* fileName) {
+	if (dataPtr == nullptr) {
+		printf("No data pointer is present. How can I write anything with no data? (This usually implies the file hasn't been read first)");
+		return;
+	}
+
+	char emptyBuf[128] = { 0 };
+	memset(emptyBuf, 0, 128);
+
+	FILE* writeStrm = fopen(fileName, "wb");
+
+	size_t gpuSize = 0;
+	size_t dataSize = 0;
+	for (int i = 0; i < entryCount; i++) {
+		dataSize += fileEntries[i].dataSectSize;
+		for (int k = 0; k < gpuList[i].entryCount; k++) {
+			if (dirtyFiles[i].gpuSects[k].gpuSize != 0) {
+				gpuSize += dirtyFiles[i].gpuSects[k].gpuSize;
+			}
+			else {
+				gpuSize += gpuList[i].offsets[k].size;
+			}
+		}
+	}
+
+	int32_t gpuOffs = 0x28 + fileListDataSize + gpuListSize;
+	int32_t dataOffs = gpuOffs + gpuSize;
+
+	size_t mainDataSize = fileListDataSize + gpuListSize + gpuSize + dataSize;
+
+	char* mainData = (char*)malloc(mainDataSize);
+
+	fwrite(&entryCount, sizeof(int16_t), 1, writeStrm);
+	fwrite(&isCompressed, sizeof(int16_t), 1, writeStrm);
+	fwrite(&iUnk1, sizeof(int32_t), 1, writeStrm);
+
+	fwrite(&fileListOffset, sizeof(int32_t), 1, writeStrm);
+	fwrite(&fileListDataSize, sizeof(int32_t), 1, writeStrm);
+	fwrite(&gpuListOffset, sizeof(int32_t), 1, writeStrm);
+	fwrite(&gpuListSize, sizeof(int32_t), 1, writeStrm);
+
+	fwrite(&gpuOffs, sizeof(int32_t), 1, writeStrm);
+	fwrite(&gpuSize, sizeof(int32_t), 1, writeStrm);
+	fwrite(&dataOffs, sizeof(int32_t), 1, writeStrm);
+	fwrite(&dataSize, sizeof(int32_t), 1, writeStrm);
+
+	int32_t fileGPUOffs = 0;
+	int32_t fileDataOffs = 0;
+	for (int i = 0; i < entryCount; i++) {
+		memcpy(mainData + (sizeof(FileEntry) * i), fileEntries[i].fileName, 0x80);
+		memcpy(mainData + (sizeof(FileEntry) * i) + 0x80, &fileEntries[i].type, sizeof(int32_t));
+		memcpy(mainData + (sizeof(FileEntry) * i) + 0x84, &fileEntries[i].timestamp, sizeof(int32_t));
+		memcpy(mainData + (sizeof(FileEntry) * i) + 0x88, &fileEntries[i].fUnk1, sizeof(int32_t));
+		memcpy(mainData + (sizeof(FileEntry) * i) + 0x8C, &fileEntries[i].iUnk1, sizeof(int32_t));
+
+		if (fileEntries[i].dataSectSize != 0) {
+			memcpy(mainData + (sizeof(FileEntry) * i) + 0x90, &fileDataOffs, sizeof(int32_t));
+		}
+		else {
+			memcpy(mainData + (sizeof(FileEntry) * i) + 0x90, &fileEntries[i].dataSectSize, sizeof(int32_t));
+		}
+
+		if (dirtyFiles[i].dataSize != 0) {
+			memcpy(mainData + (sizeof(FileEntry) * i) + 0x94, &dirtyFiles[i].dataSize, sizeof(int32_t));
+			fileDataOffs += dirtyFiles[i].dataSize;
+		}
+		else {
+			memcpy(mainData + (sizeof(FileEntry) * i) + 0x94, &fileEntries[i].dataSectSize, sizeof(int32_t));
+			fileDataOffs += fileEntries[i].dataSectSize;
+		}
+
+		if (gpuList[i].entryCount == 0) {
+			int32_t blank = 0;
+			memcpy(mainData + (sizeof(FileEntry) * i) + 0x98, &blank, sizeof(int32_t));
+		}
+		else {
+			memcpy(mainData + (sizeof(FileEntry) * i) + 0x98, &fileGPUOffs, sizeof(int32_t));
+		}
+
+		int32_t totalSize = gpuList[i].tableSize;
+		for (int k = 0; k < gpuList[i].entryCount; k++) {
+			if (dirtyFiles[i].gpuSects[k].gpuSize != 0) {
+				totalSize += dirtyFiles[i].gpuSects[k].gpuSize;
+			}
+			else {
+				totalSize += gpuList[i].offsets[k].size;
+			}
+		}
+		memcpy(mainData + (sizeof(FileEntry) * i) + 0x9C, &totalSize, sizeof(int32_t));
+		fileGPUOffs += gpuList[i].tableSize;
+	}
+
+	int32_t currentGpuOffs = 0;
+	int32_t currentGpuListOffs = gpuListOffset - 0x28;
+	for (int i = 0; i < entryCount; i++) {
+		if (gpuList[i].entryCount == 0) continue;
+		memcpy(mainData + currentGpuListOffs, &gpuList[i].tableSize, sizeof(int32_t));
+		memcpy(mainData + currentGpuListOffs + 4, &gpuList[i].entryCount, sizeof(int32_t));
+
+		for (int k = 0; k < gpuList[i].entryCount; k++) {
+			memcpy(mainData + currentGpuListOffs + 8 + (8 * k), &currentGpuOffs, sizeof(int32_t));
+			if (dirtyFiles[i].gpuSects[k].gpuSize != 0) {
+				memcpy(mainData + currentGpuListOffs + 12 + (8 * k), &dirtyFiles[i].gpuSects[k].gpuSize, sizeof(int32_t));
+				currentGpuOffs += dirtyFiles[i].gpuSects[k].gpuSize;
+			}
+			else {
+				memcpy(mainData + currentGpuListOffs + 12 + (8 * k), &gpuList[i].offsets[k].size, sizeof(int32_t));
+				currentGpuOffs += gpuList[i].offsets[k].size;
+			}
+		}
+
+		currentGpuListOffs += gpuList[i].tableSize;
+	}
+
+	gpuOffs -= 0x28;
+	dataOffs -= 0x28;
+
+	currentGpuOffs = gpuOffs;
+	int32_t currentDataOffs = dataOffs;
+
+	for (int i = 0; i < entryCount; i++) {
+		// Data
+		if (dirtyFiles[i].dataSize != 0) {
+			memcpy(mainData + currentDataOffs, dirtyFiles[i].newDataSect, dirtyFiles[i].dataSize);
+			currentDataOffs += dirtyFiles[i].dataSize;
+		}
+		else {
+			char* dataBuf = GetFileData(i);
+			memcpy(mainData + currentDataOffs, dataBuf, fileEntries[i].dataSectSize);
+			currentDataOffs += fileEntries[i].dataSectSize;
+			free(dataBuf);
+		}
+
+		// GPU
+		for (int k = 0; k < gpuList[i].entryCount; k++) {
+			if (dirtyFiles[i].gpuSects[k].gpuSize != 0) {
+				memcpy(mainData + currentGpuOffs, dirtyFiles[i].gpuSects[k].newData, dirtyFiles[i].gpuSects[k].gpuSize);
+				currentGpuOffs += dirtyFiles[i].gpuSects[k].gpuSize;
+			}
+			else {
+				char* dataBuf = GetFileGPU(i, k);
+				memcpy(mainData + currentGpuOffs, dataBuf, gpuList[i].offsets[k].size);
+				currentGpuOffs += gpuList[i].offsets[k].size;
+				free(dataBuf);
+			}
+		}
+
+		IncreaseCurrentSavedOnLoadingWidget();
+	}
+
+	if (isCompressed) {
+		uint32_t compedSize = compressBound(mainDataSize);
+		unsigned long dstSize = 0;
+
+		unsigned char* compedBuffer = (unsigned char*)malloc(compedSize);
+		int ret = compress(compedBuffer, &dstSize, (unsigned char*)mainData, mainDataSize);
+
+		printf("%d\n", ret);
+		if (ret == Z_OK) {
+			fwrite(compedBuffer, dstSize, 1, writeStrm);
+		}
+
+		free(compedBuffer);
+	}
+	else {
+		fwrite(mainData, mainDataSize, 1, writeStrm);
+	}
+
+	fflush(writeStrm);
+	fclose(writeStrm);
+
+	free(mainData);
 }

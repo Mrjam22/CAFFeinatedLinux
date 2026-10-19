@@ -1,6 +1,9 @@
 #pragma once
 #include "CommonReader.h"
 
+// Enables verbosity on the hashing code.
+const bool VERBOSE_PRINTOUT = false;
+
 /// <summary>
 /// A large array of bytes (1024 entries) that are used for generating the aid hash for Nuts & Bolts and Kinect Sports.
 /// </summary>
@@ -1383,10 +1386,10 @@ static uint16_t locHashElfHash16(char* str)
 /// <param name="str"></param>
 /// <returns>An unsigned integer containing the hash.</returns>
 static uint32_t assetIdGetHash_Typed(char* str) {
-	printf("Inserted file %s\n", str);
+	if (VERBOSE_PRINTOUT) printf("Inserted file %s\n", str);
 
 	if (*str == '\0') {
-		printf("A blank string has been used for assetIdGetHash_NutsBolts(), this won't do anything.\n", str);
+		printf("A blank string has been used for assetIdGetHash_Typed(), this won't do anything.\n", str);
 		return 0;
 	}
 
@@ -1405,20 +1408,19 @@ static uint32_t assetIdGetHash_Typed(char* str) {
 
 		// Gets the type from the provided string.
 		assetGetTypeFromString(curVal, type);
-		printf("Aid Type -> \"%s\"\n", type);
+		if (VERBOSE_PRINTOUT) printf("Aid Type -> \"%s\"\n", type);
 
 		// Gets the type ID from the type string.
 		int32_t idx = GetAssetIDFromType(type);
-		printf("Aid ID -> %d\n", idx);
+		if (VERBOSE_PRINTOUT) printf("Aid ID -> %d\n", idx);
 
 		// Shift the retrieved value as we will be appending it to our hash.
 		adjustedIdx = (idx & 0xFF) << 0x18;
-		printf("Type -> %08x\n", adjustedIdx);
+		if (VERBOSE_PRINTOUT) printf("Type -> %08x\n", adjustedIdx);
 
 		// Set the string position to the domain section. (For Nuts & Bolts, should be "banjox")
 		curVal = str + 4 + strlen(type) + 1;
-
-		printf("%s\n", curVal);
+		if (VERBOSE_PRINTOUT) printf("%s\n", curVal);
 
 		// Now we can move on to generating the hash.
 	}
@@ -1430,20 +1432,19 @@ static uint32_t assetIdGetHash_Typed(char* str) {
 
 		// Gets the type from the provided string.
 		assetGetTypeFromString(curVal, type);
-		printf("Aid Type -> \"%s\"\n", type);
+		if (VERBOSE_PRINTOUT) printf("Aid Type -> \"%s\"\n", type);
 
 		// Gets the type ID from the type string.
 		int32_t idx = GetAssetIDFromType(type);
-		printf("Aid ID -> %d\n", idx);
+		if (VERBOSE_PRINTOUT) printf("Aid ID -> %d\n", idx);
 
 		// Shift the retrieved value as we will be appending it to our hash.
 		adjustedIdx = (idx & 0xFF) << 0x18;
-		printf("Type -> %08x\n", adjustedIdx);
+		if (VERBOSE_PRINTOUT) printf("Type -> %08x\n", adjustedIdx);
 
 		// Set the string position to after the identifier and type.
 		curVal = str + 9 + strlen(type) + 1;
-
-		printf("%s\n", curVal);
+		if (VERBOSE_PRINTOUT) printf("%s\n", curVal);
 
 		// Now we can move on to generating the hash.
 	}
@@ -1456,41 +1457,46 @@ static uint32_t assetIdGetHash_Typed(char* str) {
 		// Increment the string.
 		curVal++;
 
-		printf("Current Hash -> %08x | ", hash);
-
-		printf("Curr Char -> %c | ", currChar);
+		if (VERBOSE_PRINTOUT) {
+			printf("Current Hash -> %08x | ", hash);
+			printf("Curr Char -> %c | ", currChar);
+		}
 
 		// Mask out the first byte of the hash and XOR it with the current character in the string.
 		val = (hash & 0x000000FF) ^ currChar;
 
-		printf("Value -> %d | ", val);
+		if (VERBOSE_PRINTOUT) printf("Value -> %d | ", val);
 
 		// Shift the current hash right by 8 and mask out.
 		shift = (hash >> 8) & 0x00FFFFFF;
 
-		printf("Shift -> %d | ", shift);
+		if (VERBOSE_PRINTOUT) printf("Shift -> %d | ", shift);
 
 		// Shift our current value by 2 bytes to the left.
 		valShift = val << 2;
 
-		printf("Shifted Val -> %d | ", valShift);
-
-		printf("Hash Arr Val -> %u | ", flipEndian(getIntFromHashArray((int32_t)valShift)));
+		if (VERBOSE_PRINTOUT) {
+			printf("Shifted Val -> %d | ", valShift);
+			printf("Hash Arr Val -> %u | ", flipEndian(getIntFromHashArray((int32_t)valShift)));
+		}
+		
 
 		// Get an integer from an array of bytes, flip it and XOR by our shift mask.
 		hash = flipEndian(getIntFromHashArray((int32_t)valShift)) ^ shift;
 
-		printf("Hash Value -> %u (%08X) ", hash, hash);
+		if (VERBOSE_PRINTOUT) {
+			printf("Hash Value -> %u (%08X) ", hash, hash);
+			printf("\n");
+		}
 
 		// Get the next character in the string and repeat until we are done.
 		currChar = *curVal;
-		printf("\n");
 	}
 
 	// Finally, append our type ID to the hash.
 	uint32_t finalVal = hash & 0x00ffffff | adjustedIdx;
 
-	printf("Final Hash -> %08x\n", finalVal);
+	if (VERBOSE_PRINTOUT) printf("Final Hash -> %08x\n", finalVal);
 
 	// And now, we return our hash.
 	return finalVal;
@@ -1503,7 +1509,7 @@ static uint32_t assetIdGetHash_Typed(char* str) {
 /// <param name="str"></param>
 /// <returns>An unsigned 64-bit value containing the hash.</returns>
 static uint64_t assetIdGetHash_BaseExt(char* str) {
-	printf("Inserted file %s\n", str);
+	if (VERBOSE_PRINTOUT) printf("Inserted file %s\n", str);
 
 	if (*str == '\0') {
 		printf("A blank string has been used for assetIdGetHash_BaseExt(), this won't do anything.\n");
@@ -1574,8 +1580,8 @@ static uint64_t assetIdGetHash_BaseExt(char* str) {
 	// Finally, append our adjusted type ID to the hash.
 	uint64_t finalVal = adjustedIdx | hash & 0x1ffffffffffffff;
 
-	printf("Hash -> 0x%016I64x\n", finalVal);
-
+	if (VERBOSE_PRINTOUT) printf("Hash -> 0x%016I64x\n", finalVal);
+	
 	// And now, we return our hash.
 	return finalVal;
 }
@@ -1587,7 +1593,7 @@ static uint64_t assetIdGetHash_BaseExt(char* str) {
 /// <param name="str"></param>
 /// <returns>An unsigned integer containing the hash.</returns>
 static uint32_t assetIdGetHash_Base(char* str) {
-	//printf("Inserted file %s\n", str);
+	if (VERBOSE_PRINTOUT) printf("Inserted file %s\n", str);
 
 	if (*str == '\0') {
 		printf("A blank string has been used for assetIdGetHash_Base(), this won't do anything.\n");
@@ -1610,26 +1616,26 @@ static uint32_t assetIdGetHash_Base(char* str) {
 	while (currChar != '\0') {
 		curVal++;
 
-		//printf("Current Hash -> %08x | ", hash);
+		if (VERBOSE_PRINTOUT) printf("Current Hash -> %08x | ", hash);
 
-		//printf("Curr Char -> %c | ", currChar);
+		if (VERBOSE_PRINTOUT) printf("Curr Char -> %c | ", currChar);
 
 		hash = hash * 0x10 + (currChar & 0xdf);
 
 		val = hash & 0xf0000000;
 
-		//printf("Value -> %u | ", val);
+		if (VERBOSE_PRINTOUT) printf("Value -> %u | ", val);
 		
 		if (val != 0) {
 			hash = hash ^ (val | val >> 0x18);
 		}
 
-		//printf("\n");
+		if (VERBOSE_PRINTOUT) printf("\n");
 
 		currChar = *curVal;
 	}
 
-	//printf("Final Hash -> %08x\n", hash);
+	if (VERBOSE_PRINTOUT) printf("Final Hash -> %08x\n", hash);
 
 	// And now, we return our hash.
 	return hash;

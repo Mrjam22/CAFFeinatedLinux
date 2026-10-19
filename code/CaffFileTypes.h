@@ -601,7 +601,7 @@ public:
 	//unsigned char colB = 0xFF; // 0x1A
 	//unsigned char colA = 0xFF; // 0x1B
 
-	int32_t unk4 = 0; // 0x1C
+	int32_t buttonMask = 0; // 0x1C
 	int32_t unk5 = 0; // 0x20
 };
 
@@ -612,7 +612,8 @@ public:
 	bool isSaveVehicle = false;
 
 	uint16_t numOfParts = 0; // 0x0
-	int16_t unk1 = 0; // 0x2
+	int8_t unk1 = 0; // 0x2
+	int8_t unk1_1 = 0; // 0x3
 	float preloadPower = 0; // 0x4
 	float preloadFuel = 0; // 0x8
 	float preloadAmmo = 0; // 0xC
@@ -641,7 +642,7 @@ public:
 	char unk8 = 0; // 0x7A
 	char unk9 = 0; // 0x7B
 
-	VehiclePart* parts = nullptr;
+	std::vector<VehiclePart> parts;
 
 	void ReadVehicle(char* data, bool isFromSave);
 
@@ -660,28 +661,13 @@ public:
 	void AddEntry(VehiclePart part) {
 		numOfParts++;
 
-		parts = (VehiclePart*)realloc(parts, (sizeof(VehiclePart) * numOfParts));
-		parts[numOfParts - 1] = part;
+		parts.push_back(part);
 	}
 
 	void RemoveEntry(int32_t idx) {
-		VehiclePart* tmpParts = (VehiclePart*)malloc((sizeof(VehiclePart) * numOfParts) - sizeof(VehiclePart));
-		int32_t index = 0;
-		for (int32_t i = 0; i < numOfParts; i++) {
-			if (i == idx) continue;
-			tmpParts[index] = parts[i];
-			index++;
-		}
-		free(parts);
-
 		numOfParts--;
-		parts = (VehiclePart*)malloc(sizeof(VehiclePart) * numOfParts);
 
-		for (int32_t i = 0; i < numOfParts; i++) {
-			parts[i] = tmpParts[i];
-		}
-
-		free(tmpParts);
+		parts.erase(parts.begin() + idx);
 	}
 };
 

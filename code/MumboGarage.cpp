@@ -1096,32 +1096,114 @@ void readFolderGroup()
 	nfdchar_t* outPath = NULL;
 
 	if (NFD_PickFolderU8(&outPath, "") == NFD_OKAY) {
-
-		if (fileType != NONE) {
-			disposeAndCloseActiveFile();
-		}
-
-		sprintf(currentFileName, "%s", outPath);
-		PRINT("Folder picked: %s\n", currentFileName);
-
-		for (auto& entry : std::filesystem::recursive_directory_iterator(outPath))
-		{
-			if (entry.is_regular_file())
-			{
-				char* recFileName = (char*)malloc(MAX_PATH);
-				memset(recFileName, 0, MAX_PATH);
-				wcstombs(recFileName, entry.path().c_str() + strlen(outPath) + 1, MAX_PATH);
-				PRINT("File Found: %s\n", recFileName);
-
-				folderFile.fileCount++;
-				folderFile.fileNames.push_back(recFileName);
-			}
-		}
-		
-		fileType = FOLDER_GROUP;
+		SetupLoadingPromptWidget("Currently reading the folder. Please wait.");
+		std::thread(&readFolderLogicGroup, outPath).detach();
+		std::thread(&countTimeToLoad).detach();
 	}
 	else {
 	}
+}
+
+void readFolderLogicGroup(char* outPath)
+{
+	if (fileType != NONE) {
+		disposeAndCloseActiveFile();
+	}
+
+	sprintf(currentFileName, "%s", outPath);
+	PRINT("Folder picked: %s\n", currentFileName);
+
+	folderFile.currentDirectory = (char*)malloc(MAX_PATH);
+	sprintf(folderFile.currentDirectory, "%s", outPath);
+
+	for (auto& entry : std::filesystem::recursive_directory_iterator(outPath))
+	{
+		if (entry.is_regular_file())
+		{
+			char* recFileName = (char*)malloc(MAX_PATH);
+			memset(recFileName, 0, MAX_PATH);
+			wcstombs(recFileName, entry.path().c_str() + strlen(outPath) + 1, MAX_PATH);
+			PRINT("File Found: %s\n", recFileName);
+
+			char* recFilePath = (char*)malloc(MAX_PATH);
+			memset(recFilePath, 0, MAX_PATH);
+			wcstombs(recFilePath, entry.path().c_str(), MAX_PATH);
+
+
+			folderFile.fileCount++;
+			folderFile.fileNames.push_back(recFileName);
+
+			CaffType type = NONE;
+
+			// Some file checks
+			FILE* currentFile = fopen(recFilePath, "rb");
+			char magic[4] = { 0 };
+			fread(magic, 1, 4, currentFile);
+
+			if (strncmp(magic, "CAFF", 4) == 0) {
+				// Version Check
+				char version[16] = { 0 };
+				fread(version, 1, 16, currentFile);
+
+				if (strcmp(version, "24.09.03.0026") == 0) {
+					type = BUNDLEV26;
+				}
+				if (strcmp(version, "28.01.05.0031") == 0) {
+					type = BUNDLEV31;
+				}
+				if (strcmp(version, "07.08.06.0036") == 0) {
+					type = BUNDLEV36;
+				}
+				if (strcmp(version, "08.11.07.0040") == 0) {
+					type = BUNDLEV40;
+				}
+			}
+
+			// Do some additional checks if it isn't a regular bundle file.
+			if (type == NONE) {
+
+				if (strstr(recFileName, ".rpk") != nullptr) {
+					type = RR_RPK;
+				}
+				if (strstr(recFileName, ".bnl") != nullptr) { // This will generally only be a Ghoulies bundle file if we already found VP's .bnl files via the magic.
+					type = GHOUL_BUNDLE;
+				}
+				if (strstr(recFileName, ".pkg") != nullptr) { // This will generally only be a Ghoulies bundle file if we already found VP's .bnl files via the magic.
+					type = PINATA_PKG;
+				}
+				if (strstr(recFileName, "debug_hash.bin") != nullptr || strstr(recFileName, "debug_pack.bin") != nullptr) { // This will generally only be a Ghoulies bundle file if we already found VP's .bnl files via the magic.
+					type = PINATA_DBBUNDLE;
+				}
+
+				if (type == NONE) {
+					int32_t valType = 0;
+					int32_t sectCount = 0;
+
+					fseek(currentFile, 0, SEEK_SET);
+
+					fread(&valType, 1, 4, currentFile);
+					fseek(currentFile, 0xC, SEEK_SET);
+					fread(&sectCount, 1, 4, currentFile);
+
+					if (sectCount == 2 && (valType > 0 && valType <= 29)) {
+						type = GHOUL_DEMAND;
+					}
+
+					if (valType == 0x7CB48C43) {
+						type = NB_STREAMBUNDLE;
+					}
+				}
+			}
+			fclose(currentFile);
+
+			folderFile.fileTypes.push_back(type);
+		}
+	}
+
+	isTimerCounting = false;
+	CloseLoadingPromptWidget();
+
+	fileType = FOLDER_GROUP;
 }
 
 /// <summary>
@@ -1144,7 +1226,9 @@ void displayFileInfo(float barHeight) {
 
 	if (ImGui::Begin("Bundle File", 0, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBringToFrontOnFocus)) {
 		if (fileType != NONE) ImGui::Text("Time Taken to Load: %lldms (%0.3fs)", duration, duration / 1000.0);
-		switch (fileType)
+		CaffType currentType = fileType;
+		if (folderFile.currentType != NONE) currentType = folderFile.currentType;
+		switch (currentType)
 		{
 		case NONE:
 			ImGui::Text("No File Present.");
@@ -1394,6 +1478,7 @@ void displayGhoulBundleInfo() {
 		ImGui::SeparatorText("Bundle Information");
 		bool isComped = ghoulBundleFile.isCompressed;
 		ImGui::Checkbox("Is Compressed", &isComped);
+		ghoulBundleFile.isCompressed = isComped;
 
 		ImGui::Spacing();
 		ImGui::SeparatorText("Bundle Sections");
@@ -1526,10 +1611,17 @@ void displayProperties(float barHeight) {
 	int32_t height;
 	glfwGetWindowSize(window, &width, &height);
 	ImGui::SetNextWindowPos(ImVec2(0, (height / 2)));
-	ImGui::SetNextWindowSize(ImVec2(width / 2.5, (height / 2) + barHeight));
+	ImGui::SetNextWindowSize(ImVec2(width / 2.5, (height / 2)));
 
-	if (ImGui::Begin("Properties", 0, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBringToFrontOnFocus)) {
-		switch (fileType)
+	if (ImGui::Begin("Properties", 0, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_HorizontalScrollbar)) {
+		CaffType currentType = fileType;
+		if (folderFile.currentType != NONE && fileIdx != -1) currentType = folderFile.currentType;
+		if (folderFile.currentType != NONE) {
+			if(folderFile.currentType == GHOUL_DEMAND) currentType = folderFile.currentType;
+			else if(fileIdx != -1) currentType = folderFile.currentType;
+		}
+
+		switch (currentType)
 		{
 		case BUNDLEV36:
 			displayActiveFileProperty();
@@ -2691,17 +2783,21 @@ void displayActiveGhoulDemandProperty() {
 	ImGui::PopID();
 
 	if (ghoulDemandFile.gpuSectSize != 0) {
-		ImGui::SameLine();
 		ImGui::PushID("gpu");
-		if (ImGui::Button(".gpu")) {
-			char* activeSect = ghoulDemandFile.GetGpuSection();
+		for (int i = 0; i < ghoulDemandFile.gpuList.entryCount; i++) {
+			ImGui::SameLine();
+			char message[16] = { 0 };
+			sprintf(message, ".gpu(%d)", i + 1);
+			if (ImGui::Button(message)) {
+				char* activeSect = ghoulDemandFile.GetGpuSection(i);
 
-			char file[1024];
-			memset(file, 0, 1024);
+				char file[1024];
+				memset(file, 0, 1024);
 
-			strcat(file, "export.gpu");
+				strcat(file, "export.gpu");
 
-			writeDataToFile("export", ".gpu", activeSect, ghoulDemandFile.gpuSectSize);
+				writeDataToFile("export", message, activeSect, ghoulDemandFile.gpuList.entries[i].size);
+			}
 		}
 		ImGui::PopID();
 	}
@@ -2899,14 +2995,12 @@ void displayActiveGhoulBundleProperty() {
 	//if (suffix != NULL) {
 	//	ImGui::Text("Suffix: %s", suffix);
 	//}
-
-
 	ImGui::Text("Sections: ");
 	ImGui::SameLine();
 
 	ImGui::Text(".data");
 
-	if (ghoulBundleFile.fileEntries[fileId].gpuSectSize != 0) {
+	if (ghoulBundleFile.fileEntries[fileId].gpuSectAndListSize != 0) {
 		ImGui::SameLine();
 		ImGui::Text(".gpu");
 	}
@@ -2926,22 +3020,81 @@ void displayActiveGhoulBundleProperty() {
 	ImGui::PopID();
 
 	// Check if we actually have any GPU data for the selected item. (Usually just textures)
-	if (ghoulBundleFile.fileEntries[fileId].gpuSectSize != 0) {
-		ImGui::SameLine();
-
+	if (ghoulBundleFile.fileEntries[fileId].gpuSectAndListSize != 0) {
 		ImGui::PushID("gpu");
-		if (ImGui::Button(".gpu")) {
-			char* gpu = ghoulBundleFile.GetFileGPU(fileId);
+		for (int i = 0; i < ghoulBundleFile.gpuList[fileId].entryCount; i++) {
+			ImGui::SameLine();
 
-			printf("Exporting GPU for file %s. Offset %d with size %d.\n", ghoulBundleFile.fileEntries[fileId].fileName, ghoulBundleFile.fileEntries[fileId].gpuSectOffset, ghoulBundleFile.fileEntries[fileId].gpuSectSize);
-			writeDataToFile(lbl, ".gpu", gpu, ghoulBundleFile.fileEntries[fileId].gpuSectSize);
+			char buttonName[16];
+			sprintf(buttonName, ".gpu(%d)", i + 1);
+			if (ImGui::Button(buttonName)) {
+				char* gpu = ghoulBundleFile.GetFileGPU(fileId, i);
 
-			free(gpu);
+				printf("Exporting GPU for file %s. Offset %d with size %d.\n", ghoulBundleFile.fileEntries[fileId].fileName, ghoulBundleFile.gpuList[fileId].offsets[i].offset, ghoulBundleFile.gpuList[fileId].offsets[i].size);
+				writeDataToFile(lbl, buttonName, gpu, ghoulBundleFile.gpuList[fileId].offsets[i].size);
+
+				free(gpu);
+			}
+		}
+		ImGui::PopID();
+	}
+	ImGui::PopID();
+
+	ImGui::PushID("import");
+	ImGui::Text("Import to Available Sections:");
+	ImGui::SameLine();
+
+	ImGui::PushID("data");
+	if (ImGui::Button(".data")) {
+		char* importPath;
+
+		if (NFD_OpenDialog(&importPath, NULL, 0, "") == NFD_OKAY) {
+			FILE* importedFile = fopen(importPath, "rb");
+
+			fseek(importedFile, 0L, SEEK_END);
+			int32_t len = ftell(importedFile);
+			fseek(importedFile, 0L, SEEK_SET);
+
+			ghoulBundleFile.dirtyFiles[fileId].newDataSect = (char*)malloc(len);
+
+			fread(ghoulBundleFile.dirtyFiles[fileId].newDataSect, 1, len, importedFile);
+			fclose(importedFile);
+			ghoulBundleFile.dirtyFiles[fileId].dataSize = len;
+		}
+	}
+	ImGui::PopID();
+
+	// Check if we actually have any GPU data for the selected item. (Usually just textures)
+	if (ghoulBundleFile.fileEntries[fileId].gpuSectAndListSize != 0) {
+		ImGui::PushID("gpu");
+		for (int i = 0; i < ghoulBundleFile.gpuList[fileId].entryCount; i++) {
+			ImGui::SameLine();
+
+			char buttonName[16];
+			sprintf(buttonName, ".gpu(%d)", i + 1);
+			if (ImGui::Button(buttonName)) {
+				char* importPath;
+
+				if (NFD_OpenDialog(&importPath, NULL, 0, "") == NFD_OKAY) {
+					FILE* importedFile = fopen(importPath, "rb");
+
+					fseek(importedFile, 0L, SEEK_END);
+					int32_t len = ftell(importedFile);
+					fseek(importedFile, 0L, SEEK_SET);
+
+					ghoulBundleFile.dirtyFiles[fileId].gpuSects[i].newData = (char*)malloc(len);
+
+					fread(ghoulBundleFile.dirtyFiles[fileId].gpuSects[i].newData, 1, len, importedFile);
+					fclose(importedFile);
+					ghoulBundleFile.dirtyFiles[fileId].gpuSects[i].gpuSize = len;
+				}
+			}
 		}
 		ImGui::PopID();
 	}
 
 	ImGui::PopID();
+
 
 	switch (ghoulBundleFile.fileEntries[fileId].type)
 	{
@@ -2974,7 +3127,7 @@ void displayActiveGhoulBundleProperty() {
 
 				char* texData = (char*)malloc(activeGhoulTex->header.chunkSize);
 
-				char* gpuSect = ghoulBundleFile.GetFileGPUForTexture(fileId);
+				char* gpuSect = ghoulBundleFile.GetFileGPU(fileId, 0);
 
 				memcpy(texData, gpuSect + (activeGhoulTex->header.chunkSize * activeGhoulTex->framePos), activeGhoulTex->header.chunkSize);
 
@@ -3049,7 +3202,7 @@ void displayActiveGhoulBundleProperty() {
 		}
 
 		ImGui::SeparatorText("Texture Info");
-		ImGui::Text("Format: %d | W/H : %d / %d | Chunk Size: %d", activeGhoulTex->header.format, activeGhoulTex->header.width, activeGhoulTex->header.height, activeGhoulTex->header.chunkSize);
+		ImGui::Text("Format: %s (%d) | W/H : %d / %d | Chunk Size: %d", GetXboxTextureFormatName(activeGhoulTex->header.format), activeGhoulTex->header.format, activeGhoulTex->header.width, activeGhoulTex->header.height, activeGhoulTex->header.chunkSize);
 		ImGui::Text("Frames Info: %d - %d FPS", activeGhoulTex->header.frameCount, activeGhoulTex->header.framerate);
 		ImGui::SeparatorText("Texture Preview");
 
@@ -3467,7 +3620,6 @@ void fillBundleFileList() {
 	ImGui::Text("File List");
 	ImGui::Separator();
 	for (int32_t i = 0; i < bundleFile.V36Bundle->header.numAssets; i++) {
-		ImGui::PushID(i);
 		memset(lbl, 0, 1024);
 		memset(type, 0, 32);
 		memset(domain, 0, 32);
@@ -3496,7 +3648,6 @@ void fillBundleFileList() {
 
 		if (strlen(imGuiWindowInfo.search) != 0) {
 			if (strstr(lbl, imGuiWindowInfo.search) == NULL) {
-				ImGui::PopID();
 				continue;
 			}
 		}
@@ -3504,18 +3655,18 @@ void fillBundleFileList() {
 		if (imGuiWindowInfo.aidSearch != 0) {
 			if (activeManifest) {
 				if (activeManifest->GetAidHash(i) != imGuiWindowInfo.aidSearch) {
-					ImGui::PopID();
 					continue;
 				}
 			}
 
 			if (!activeManifest) {
 				if (bundleFile.V36Bundle->hashTable[i] != imGuiWindowInfo.aidSearch) {
-					ImGui::PopID();
 					continue;
 				}
 			}
 		}
+
+		ImGui::PushID(i);
 
 		// Most entries will contain a timestamp and presumably a version number, separated by "," characters.
 		if (strchr(lbl, ',') != NULL) {
@@ -4168,49 +4319,198 @@ void fillPinataPKGFileList() {
 void fillFolderGroupList() {
 	if (imGuiWindowInfo.streamBundleSelectedBundle != -1) {
 		if (ImGui::ArrowButton("backToStreamBundle", ImGuiDir_Left)) {
-			imGuiWindowInfo.streamBundleSelectedItem = -1;
-			imGuiWindowInfo.streamBundleSelectedBundle = -1;
-			if (bundleFile.V36Bundle != nullptr)
-				delete(bundleFile.V36Bundle);
-				bundleFile.V36Bundle = nullptr;
-			fileIdx = -1;
+			disposeAndCloseDataForFolderFile();
 			return;
 		}
 		ImGui::SameLine();
 		ImGui::Text("Back to Folder Group List");
 		ImGui::Separator();
-		fillBundleFileList();
+		switch (folderFile.currentType) {
+		case BUNDLEV26: {
+			fillBundleV26FileList();
+		}
+		break;
+		case BUNDLEV31: {
+			fillBundleV31FileList();
+		}
+		break;
+		case BUNDLEV36: {
+			fillBundleFileList();
+		}
+		break;
+		case BUNDLEV40: {
+			fillBundleV40FileList();
+		}
+		break;
+		case GHOUL_BUNDLE: {
+			fillGhouliesBundleFileList();
+		}
+		break;
+		case PINATA_PKG: {
+			fillPinataPKGFileList();
+		}
+		break;
+		case RR_RPK: {
+			fillRPKFileList();
+		}
+		break;
+		}
 		return;
 	}
+
+	ImGui::Checkbox("Show Unrecognised Files", &folderFile.showInvalidFiles);
 
 	// Setup the local parameters needed.
 	char lbl[1024];
 
+	char tmpSearchFileName[16] = { 0 };
+	char tmpSearchFileNamePlain [16] = { 0 };
+	if (strlen(imGuiWindowInfo.search) != 0) {
+		if (strstr(imGuiWindowInfo.search, "banjox") != nullptr) {
+			uint32_t aid = assetIdGetHash_Typed(imGuiWindowInfo.search);
+			sprintf(tmpSearchFileNamePlain, "%02x%02x%02x%02x", (aid >> 24), (aid >> 16) & 0xFF, (aid >> 8) & 0xFF, aid & 0xFF);
+
+			if ((aid >> 24) == 0x11 || (aid >> 24) == 0x36) {
+
+				sprintf(tmpSearchFileName, "%02x\\%02x\\%02x\\%02x", (aid >> 24) & 0xFF, (aid >> 16) & 0xFF, (aid >> 8) & 0xFF, aid & 0xFF);
+			}
+			else {
+
+				sprintf(tmpSearchFileName, "%02x\\%02x%02x%02x", (aid >> 24) & 0xFF, (aid >> 16) & 0xFF, (aid >> 8) & 0xFF, aid & 0xFF);
+			}
+		}
+		if(strstr(imGuiWindowInfo.search, "ghoulies") != nullptr || strstr(imGuiWindowInfo.search, "pinata") != nullptr) {
+			uint32_t aid = assetIdGetHash_Base(imGuiWindowInfo.search);
+
+			sprintf(tmpSearchFileNamePlain, "%02x%02x%02x%02x", (aid >> 24), (aid >> 16) & 0xFF, (aid >> 8) & 0xFF, aid & 0xFF);
+			sprintf(tmpSearchFileName, "%02x%02x%02x%02x", (aid >> 24) & 0xFF, (aid >> 16) & 0xFF, (aid >> 8) & 0xFF, aid & 0xFF);
+		}
+	}
+
 	ImGui::Text("File List");
 	ImGui::Separator();
 	for (int32_t i = 0; i < folderFile.fileCount; i++) {
-		ImGui::PushID(i);
-		memset(lbl, 0, 1024);
-
-		// Check if the entry label we're reading contains "aid_".
-		strcpy(lbl, folderFile.fileNames[i]);
+		if (folderFile.fileTypes[i] == NONE && !folderFile.showInvalidFiles) continue;
 
 		if (strlen(imGuiWindowInfo.search) != 0) {
-			if (strstr(lbl, imGuiWindowInfo.search) == NULL) {
-				ImGui::PopID();
+			bool passedSearch = false;
+
+			if (strstr(folderFile.fileNames[i], imGuiWindowInfo.search) != NULL) {
+				passedSearch = true;
+			}
+
+			if (strstr(folderFile.fileNames[i], tmpSearchFileName) != NULL) {
+				passedSearch = true;
+			}
+
+			if (strstr(folderFile.fileNames[i], tmpSearchFileNamePlain) != NULL) {
+				passedSearch = true;
+			}
+
+			if (!passedSearch) {
 				continue;
 			}
 		}
+		memset(lbl, 0, 1024);
+		strcpy(lbl, folderFile.fileNames[i]);
 
+		ImGui::PushID(i);
+
+		switch (folderFile.fileTypes[i]) {
+			case NONE: {
+				strcat(lbl, " (Invalid, Unrecognised or Bad File)");
+			}
+			break;
+			case BUNDLEV26: {
+				strcat(lbl, " (V0026 File)");
+			}
+			break;
+			case BUNDLEV31: {
+				strcat(lbl, " (V0031 File)");
+			}
+			break;
+			case BUNDLEV36: {
+				strcat(lbl, " (V0036 File)");
+			}
+			break;
+			case BUNDLEV40: {
+				strcat(lbl, " (V0040 File)");
+			}
+			break;
+			case GHOUL_BUNDLE: {
+				strcat(lbl, " (Ghoulies Bundle)");
+			}
+			break;
+			case GHOUL_DEMAND: {
+				strcat(lbl, " (Ghoulies On-Demand)");
+			}
+			break;
+			case PINATA_DBBUNDLE: {
+				strcat(lbl, " (VP DVD)");
+			}
+			break;
+			case PINATA_PKG: {
+				strcat(lbl, " (VP PKG)");
+			}
+			break;
+			case RR_RPK: {
+				strcat(lbl, " (Rare Replay RPK)");
+			}
+			break;
+		}
+
+		
+		ImGui::BeginDisabled(folderFile.fileTypes[i] == NONE || folderFile.fileTypes[i] == PINATA_DBBUNDLE);
 		if (ImGui::Selectable(lbl, imGuiWindowInfo.streamBundleSelectedItem == i, ImGuiSelectableFlags_AllowDoubleClick)) {
 			if (ImGui::IsMouseDoubleClicked(0)) {
-				/*imGuiWindowInfo.streamBundleSelectedBundle = i + 1;
-				if (bundleFile.V36Bundle == nullptr) {
-					bundleFile.V36Bundle = new BundleV36();
+				strcat(currentFileName, "\\");
+				strcat(currentFileName, folderFile.fileNames[i]);
+				imGuiWindowInfo.streamBundleSelectedBundle = i + 1;
+				switch (folderFile.fileTypes[i]) {
+				case BUNDLEV26: {
+					if (bundleFile.V26Bundle == nullptr) {
+						bundleFile.V26Bundle = new BundleV26();
+					}
 				}
-				PinataDbBundleFile.precachedEntries[i].indexIdx;
-				char* fileData = PinataDbBundleFile.getFileData(PinataDbBundleFile.precachedEntries[i].hashIdx, nullptr);
-				bundleFile.V36Bundle->readBundleFileV0036(fileData);*/
+				break;
+				case BUNDLEV31: {
+					if (bundleFile.V31Bundle == nullptr) {
+						bundleFile.V31Bundle = new BundleV31();
+					}
+				}
+				break;
+				case BUNDLEV36: {
+					if (bundleFile.V36Bundle == nullptr) {
+						bundleFile.V36Bundle = new BundleV36();
+					}
+					bundleFile.V36Bundle->readStandaloneBundleFile(currentFileName);
+				}
+				break;
+				case BUNDLEV40: {
+					if (bundleFile.V40Bundle == nullptr) {
+						bundleFile.V40Bundle = new BundleV40();
+					}
+					bundleFile.V40Bundle->readStandaloneBundleFile(currentFileName);
+				}
+				break;
+				case GHOUL_BUNDLE: {
+					ghoulBundleFile.readStandaloneBundleFile(currentFileName);
+				}
+				break;
+				case GHOUL_DEMAND: {
+					ghoulDemandFile.readStandaloneDemandFile(currentFileName);
+				}
+				break;
+				case PINATA_PKG: {
+					PinataPKGFile.readStandalonePkgFile(currentFileName);
+				}
+				break;
+				case RR_RPK: {
+					rpkFile.readStandaloneRPKFile(currentFileName);
+				}
+				break;
+				}
+				folderFile.currentType = folderFile.fileTypes[i];
 			}
 			if (imGuiWindowInfo.streamBundleSelectedItem == i) {
 				imGuiWindowInfo.streamBundleSelectedItem = -1;
@@ -4219,6 +4519,7 @@ void fillFolderGroupList() {
 				imGuiWindowInfo.streamBundleSelectedItem = i;
 			}
 		}
+		ImGui::EndDisabled();
 
 		ImGui::PopID();
 	}
@@ -4264,6 +4565,7 @@ void handleSavingAsync(const char* fileName) {
 	switch (fileType) {
 	case BUNDLEV36: { SetupLoadingBarPromptWidget("Currently saving bundle file...", bundleFile.V36Bundle->header.numSections); writeCaffFile(fileName); } break;
 	case NB_STREAMBUNDLE: { SetupLoadingBarPromptWidget("Currently saving streamed bundle file...", streamBundleFile.header.totalFileTotal); writeStreamBundleFile(fileName); } break;
+	case GHOUL_BUNDLE: { SetupLoadingBarPromptWidget("Currently saving bundle file...", ghoulBundleFile.entryCount); ghoulBundleFile.writeToFile(fileName); } break;
 	case PINATA_PKG: { SetupLoadingBarPromptWidget("Currently saving PKG file...", PinataPKGFile.header.entryCount); PinataPKGFile.writePinataPKG(fileName); } break;
 	}
 
@@ -4882,13 +5184,13 @@ void writeDataToFile(const char* fileName, const char* filter, char *data, size_
 		size_t written = fwrite(data, sizeof(char), dataSize, writeFile);
 
 		if (written != dataSize) {
-			printf("An error occured while writing data to output file.\n");
+			printf("An error occured while writing data to output file. (Error code 0x%08X)\n", errno);
 		}
 
 		int32_t flush = fflush(writeFile);
 
 		if (flush != 0) {
-			printf("An error occured while flushing data to output file.\n");
+			printf("An error occured while flushing data to output file. (Error code 0x%08X)\n", errno);
 		}
 
 		fclose(writeFile);
@@ -4908,6 +5210,7 @@ void disposeAndCloseActiveFile() {
 	streamBundleFile.ClearActiveData();
 
 	ghoulBundleFile.ClearBundleFileData();
+	ghoulDemandFile.ClearActiveData();
 	PinataDbBundleFile.ClearActiveBundleData();
 	PinataPKGFile.ClearActiveData();
 	rpkFile.ClearActiveData();
@@ -4944,6 +5247,50 @@ void disposeAndCloseActiveFile() {
 	tempTexInt = -1;
 	fileType = CaffType::NONE;
 	imGuiWindowInfo.saveData.targetType = NONE;
+}
+
+void disposeAndCloseDataForFolderFile() {
+	bundleFile.ClearActiveBundleFile();
+	streamBundleFile.ClearActiveData();
+	ghoulBundleFile.ClearBundleFileData();
+	ghoulDemandFile.ClearActiveData();
+	PinataDbBundleFile.ClearActiveBundleData();
+	PinataPKGFile.ClearActiveData();
+	rpkFile.ClearActiveData();
+
+	imGuiWindowInfo.streamBundleSelectedItem = -1;
+	imGuiWindowInfo.streamBundleSelectedBundle = -1;
+	fileId = -1;
+	fileIdx = -1;
+	assetType = -1;
+	folderFile.currentType = NONE;
+
+	memset(currentFileName, 0, MAX_PATH);
+	strcpy(currentFileName, folderFile.currentDirectory);
+
+	if (activeManifest != nullptr) {
+		delete(activeManifest);
+		activeManifest = nullptr;
+	}
+
+	if (activeTex != nullptr) {
+		free(activeTex);
+		activeTex = nullptr;
+	}
+
+	activeConkerTex.refresh = true;
+
+	if (activeGhoulTex != nullptr) {
+		activeGhoulTex->refresh = true;
+		free(activeGhoulTex);
+		activeGhoulTex = nullptr;
+	}
+
+	if (tempTexInt != -1) {
+		glDeleteTextures(1, &tempTexInt);
+	}
+
+	tempTexInt = -1;
 }
 
 void TestBundleRecompilation() {

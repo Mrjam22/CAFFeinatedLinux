@@ -1658,7 +1658,7 @@ char* Vehicle::WriteToArray() {
 		float pitchVar = flipEndian_f32((char*)&parts[i].pitch, SRC_ENDIANLITTLE);
 		float rollVar = flipEndian_f32((char*)&parts[i].roll, SRC_ENDIANLITTLE);
 
-		int32_t unk2PartVar = flipEndian(parts[i].unk4);
+		int32_t unk2PartVar = flipEndian(parts[i].buttonMask);
 		int32_t unk3PartVar = flipEndian(parts[i].unk5);
 
 		memcpy(buf + 0x7C + (0x24 * i) + 8, &partIdxVar, sizeof(uint32_t));
@@ -1741,7 +1741,7 @@ void Vehicle::WriteToFile(char* fileName, bool isSave) {
 		float pitchVar = flipEndian_f32((char*)&parts[i].pitch, SRC_ENDIANLITTLE);
 		float rollVar = flipEndian_f32((char*)&parts[i].roll, SRC_ENDIANLITTLE);
 
-		int32_t unk2PartVar = flipEndian(parts[i].unk4);
+		int32_t unk2PartVar = flipEndian(parts[i].buttonMask);
 		int32_t unk3PartVar = flipEndian(parts[i].unk5);
 
 		fwrite(&parts[i].xPos, 1, 1, writeStrm);
@@ -1902,11 +1902,10 @@ void Vehicle::ReadVehicle(char* data, bool isFromSave) {
 		printf("X Button Assignment: %u\n", xButtonAssignment);
 
 		// Read the data from every part.
-		parts = new VehiclePart[numOfParts]();
-
 		int32_t partOffset = pos + 0x7C;
 
 		for (int32_t i = 0; i < numOfParts; i++) {
+			parts.emplace_back();
 			uint32_t partIdxVar; // 0x8
 
 			float yawVar; // 0xC
@@ -1942,7 +1941,7 @@ void Vehicle::ReadVehicle(char* data, bool isFromSave) {
 
 			parts[i].color = colour;
 			parts[i].partIdx = flipEndian(partIdxVar);
-			parts[i].unk4 = flipEndian(unk2PartVar);
+			parts[i].buttonMask = flipEndian(unk2PartVar);
 			parts[i].unk5 = flipEndian(unk3PartVar);
 
 			parts[i].yaw = flipEndian_f32(vehiclePtr + (partOffset + (i * 0x24)) + 0xC, SRC_ENDIANBIG);

@@ -20,6 +20,7 @@ void readCaffFile();
 void writeCaffFile(const char* fileName);
 void writeStreamBundleFile(const char* fileName);
 void disposeAndCloseActiveFile();
+void disposeAndCloseDataForFolderFile();
 void writeDataToFile(const char* fileName, const char* filter, char* data, size_t dataSize);
 
 void exportFilesFromBundleRaw(int fileCount);
@@ -42,6 +43,7 @@ void fillRPKFileList();
 void displayActiveRPKFileProperty();
 
 void readFolderGroup();
+void readFolderLogicGroup(char* outPath);
 void fillFolderGroupList();
 
 //Image Functions
