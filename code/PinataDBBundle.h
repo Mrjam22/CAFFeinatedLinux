@@ -35,6 +35,7 @@ public:
 	DBHashFile hashFile;
 
 	bool isTiPIndexFile = false;
+	bool isBigEndian = false;
 
 	int32_t indexCount = 0;
 	IndexEntry* indexFile = nullptr;

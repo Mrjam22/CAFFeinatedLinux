@@ -66,10 +66,9 @@ struct GhoulBundle {
 	int32_t dataSectOffset;
 	int32_t dataSectSize;
 
-	FileEntry* fileEntries;
+	std::vector<FileEntry> fileEntries;
 	std::vector <GpuList> gpuList;
-
-	DirtyFile* dirtyFiles;
+	std::vector <DirtyFile> dirtyFiles;
 
 	bool ReadBundleFile(char* data, size_t dataSize);
 	bool readStandaloneBundleFile(char* fileName);

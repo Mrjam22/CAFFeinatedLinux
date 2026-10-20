@@ -3121,7 +3121,13 @@ void displayActiveGhoulBundleProperty() {
 		strcpy(lbl, ghoulBundleFile.fileEntries[fileId].fileName);
 	}
 
-	ImGui::Text("Filename: %s", lbl);
+	float pos = ImGui::GetCursorPosY();
+
+	ImGui::Text("Filename: ");
+	ImGui::SameLine(0, -0.25f);
+	ImGui::SetCursorPosY(pos - 3);
+	ImGui::InputText("##xxlbl", ghoulBundleFile.fileEntries[fileId].fileName, 127, ImGuiInputTextFlags_CharsNoBlank);
+
 	ImGui::Text("Asset Type: %d (%s)", ghoulBundleFile.fileEntries[fileId].type, type);
 
 	std::time_t stamp = ghoulBundleFile.fileEntries[fileId].timestamp;
@@ -3201,11 +3207,12 @@ void displayActiveGhoulBundleProperty() {
 			fread(ghoulBundleFile.dirtyFiles[fileId].newDataSect, 1, len, importedFile);
 			fclose(importedFile);
 			ghoulBundleFile.dirtyFiles[fileId].dataSize = len;
+			ghoulBundleFile.fileEntries[fileId].timestamp = time(nullptr);
 		}
 	}
 	ImGui::PopID();
 
-	// Check if we actually have any GPU data for the selected item. (Usually just textures)
+	// Check if we actually have any GPU data for the selected item. (Usually just textures and models)
 	if (ghoulBundleFile.fileEntries[fileId].gpuSectAndListSize != 0) {
 		ImGui::PushID("gpu");
 		for (int i = 0; i < ghoulBundleFile.gpuList[fileId].entryCount; i++) {
@@ -3232,6 +3239,7 @@ void displayActiveGhoulBundleProperty() {
 					fread(ghoulBundleFile.dirtyFiles[fileId].gpuSects[i].newData, 1, len, importedFile);
 					fclose(importedFile);
 					ghoulBundleFile.dirtyFiles[fileId].gpuSects[i].gpuSize = len;
+					ghoulBundleFile.fileEntries[fileId].timestamp = time(nullptr);
 				}
 			}
 		}

@@ -130,7 +130,10 @@ bool DBBundle::readStandaloneDbBundleFiles(char* filePath) {
 	if (isTiPIndexFile) {
 		int32_t uncompedSize = 0;
 		memcpy(&uncompedSize, indexData, 4);
-		uncompedSize = flipEndian(uncompedSize);
+		if ((uncompedSize & 0xFF) == 0) {
+			uncompedSize = flipEndian(uncompedSize);
+			isBigEndian = true;
+		}
 
 		inputIndexData = InflateData(indexData + 4, 9, length - 4, uncompedSize);
 
@@ -179,13 +182,15 @@ void DBBundle::readDbBundleFiles(char* hashData, char* indexData, int32_t totalI
 	indexFileData = indexData;
 	indexCount = totalIndexCount;
 
-	int32_t fileCount = 0;
+	
+	memcpy(&hashFile.fileCount, hashData, 4);
 
-	memcpy(&fileCount, hashData, 4);
+	if ((hashFile.fileCount & 0xFF) == 0) {
+		hashFile.fileCount = flipEndian(hashFile.fileCount);
+		isBigEndian = true;
+	}
 
-	hashFile.fileCount = flipEndian(fileCount);
-
-	printf("%s - %d.\n", __func__, hashFile.fileCount);
+	printf("%s - %d files found.\n", __func__, hashFile.fileCount);
 
 	// Parse the Hash File Data first.
 	int32_t hashBasePos = 4;
@@ -213,19 +218,26 @@ void DBBundle::readDbBundleFiles(char* hashData, char* indexData, int32_t totalI
 		int32_t offset = 0;
 
 		if (isTiPIndexFile) {
-			uint64_t hash = 0;
-			memcpy(&hash, hashData + hashBasePos + (i * 8), 8);
-			hashFile.hashArray[i] = flipEndian(hash);
+			memcpy(&hashFile.hashArray[i], hashData + hashBasePos + (i * 8), 8);
+			if (isBigEndian) {
+				hashFile.hashArray[i] = flipEndian(hashFile.hashArray[i]);
+			}
 		}
 		else {
-			uint32_t hash = 0;
+			int32_t hash = 0;
 			memcpy(&hash, hashData + hashBasePos + (i * 4), 4);
-			hashFile.hashArray[i] = flipEndian(hash);
+			if (isBigEndian) {
+				hashFile.hashArray[i] = flipEndian(hash);
+			}
+			else {
+				hashFile.hashArray[i] = hash;
+			}
 		}
 
-		memcpy(&offset, hashData + offsetBasePos + (i * 4), 4);
-
-		hashFile.offsetArray[i] = flipEndian(offset);
+		memcpy(&hashFile.offsetArray[i], hashData + offsetBasePos + (i * 4), 4);
+		if (isBigEndian) {
+			hashFile.offsetArray[i] = flipEndian(hashFile.offsetArray[i]);
+		}
 
 		if (isTiPIndexFile) {
 			//printf("HASH ENTRY %d - [%016llX %d]\n", i, hashFile.hashArray[i], hashFile.offsetArray[i]);
@@ -251,11 +263,16 @@ void DBBundle::readDbBundleFiles(char* hashData, char* indexData, int32_t totalI
 		memset(indexFile[i].filename, 0, 256);
 		sscanf(indexData + charRead, "%s %d %f%n", indexFile[i].filename, &indexFile[i].timestamp, &indexFile[i].version, &count);
 
+		int32_t hash = 0;
 		if (isTiPIndexFile) {
 			indexFile[i].hash = assetIdGetHash_BaseExt(indexFile[i].filename);
+			if (!isBigEndian) {
+				indexFile[i].hash = flipEndian(indexFile[i].hash);
+			}
 		}
 		else {
-			indexFile[i].hash = assetIdGetHash_Base(indexFile[i].filename);
+			int32_t hash = assetIdGetHash_Base(indexFile[i].filename);
+			indexFile[i].hash = hash;
 		}
 
 		
@@ -272,7 +289,7 @@ void DBBundle::readDbBundleFiles(char* hashData, char* indexData, int32_t totalI
 				//printf("ENTRY %d - String %s correlates to known hash 0x%016I64x.\n", i, indexFile[i].filename, indexFile[i].hash);
 			}
 			else {
-				//printf("ENTRY %d - String %s correlates to known hash %08X.\n", i, indexFile[i].filename, indexFile[i].hash);
+				//printf("ENTRY %d - String %s correlates to known hash 0x%08X.\n", i, indexFile[i].filename, indexFile[i].hash);
 			}
 		}
 
@@ -281,7 +298,7 @@ void DBBundle::readDbBundleFiles(char* hashData, char* indexData, int32_t totalI
 				//printf("ENTRY %d - Hash of string %s (0x%016I64x) isn't present in index_hash.\n", i, indexFile[i].filename, indexFile[i].hash);
 			}
 			else {
-				//printf("ENTRY %d - Hash of string %s (%08X) isn't present in index_hash.\n", i, indexFile[i].filename, indexFile[i].hash);
+				//printf("ENTRY %d - Hash of string %s (0x%08X) isn't present in index_hash.\n", i, indexFile[i].filename, indexFile[i].hash);
 			}
 		}
 		IncreaseCurrentSavedOnLoadingWidget();

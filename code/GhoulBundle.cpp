@@ -56,13 +56,10 @@ bool GhoulBundle::ReadBundleFile(char* data, size_t dataSize) {
 
 		dataPtr = uncompedBaseData;
 
-		fileEntries = new FileEntry[entryCount];
-		dirtyFiles = new DirtyFile[entryCount];
-
-		if (fileEntries == nullptr)
-			return false;
 
 		for (int32_t i = 0; i < entryCount; i++) {
+			fileEntries.emplace_back();
+			dirtyFiles.emplace_back();
 			strncpy(fileEntries[i].fileName, dataPtr + fileListOffset + (sizeof(FileEntry) * i), FILEENTRY_NAMESIZE);
 
 			memcpy(&fileEntries[i].type, dataPtr + fileListOffset + (sizeof(FileEntry) * i) + FILEENTRY_NAMESIZE, sizeof(int32_t));
@@ -124,17 +121,9 @@ bool GhoulBundle::readStandaloneBundleFile(char* fileName) {
 void GhoulBundle::ClearBundleFileData() {
 	isReady = false;
 
-	if (fileEntries != nullptr) {
-		delete[] fileEntries;
-		fileEntries = nullptr;
-	}
-
+	fileEntries.clear();
 	gpuList.clear();
-
-	if (dirtyFiles != nullptr) {
-		delete[] dirtyFiles;
-		dirtyFiles = nullptr;
-	}
+	dirtyFiles.clear();
 
 	if (dataPtr != nullptr) {
 		free(dataPtr);
