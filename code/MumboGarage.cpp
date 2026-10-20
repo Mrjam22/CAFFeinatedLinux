@@ -631,6 +631,9 @@ static void ShowMenuFile()
 			if (fileType == GHOUL_BUNDLE) {
 				numOfFiles = ghoulBundleFile.entryCount;
 			}
+			if (fileType == GHOUL_DEMAND) {
+				numOfFiles = ghoulDemandFile.gpuList.entryCount;
+			}
 
 			SetupLoadingPromptWidget("Waiting for the Pick Folder window...");
 			std::thread(exportFilesFromBundleRaw, numOfFiles).detach();
@@ -858,6 +861,139 @@ void exportFilesFromBundleRaw(int fileCount) {
 				fclose(writeFile);
 
 				free((void*)buf);
+
+				IncreaseCurrentSavedOnLoadingWidget();
+			}
+		}
+		if (fileType == GHOUL_BUNDLE) {
+			for (int i = 0; i < ghoulBundleFile.entryCount; i++) {
+				char* dataOut = (char*)malloc(2048);
+				sprintf(dataOut, "%s\\%s.data", outPath, ghoulBundleFile.fileEntries[i].fileName);
+
+				FILE* writeFile = fopen(dataOut, "wb");
+
+				if (writeFile == NULL) {
+					ASSERT("An error occured while creating the output file (%s).\n", dataOut);
+					return;
+				}
+
+				PRINT("Exporting %s.\n", dataOut);
+
+				char* data = ghoulBundleFile.GetFileData(i);
+				size_t written = fwrite(data, 1, ghoulBundleFile.fileEntries[i].dataSectSize, writeFile);
+
+				if (written != ghoulBundleFile.fileEntries[i].dataSectSize) {
+					ASSERT("An error occured while writing data to output file.\n");
+				}
+
+				int32_t flush = fflush(writeFile);
+
+				if (flush != 0) {
+					ASSERT("An error occured while flushing data to output file.\n");
+				}
+
+				fclose(writeFile);
+
+				free((void*)data);
+				free((void*)dataOut);
+
+				for (int32_t k = 0; k < ghoulBundleFile.gpuList[i].entryCount; k++) {
+					char* gpuOut = (char*)malloc(2048);
+					sprintf(gpuOut, "%s\\%s.gpu(%d)", outPath, ghoulBundleFile.fileEntries[i].fileName, k + 1);
+
+					writeFile = fopen(gpuOut, "wb");
+
+					if (writeFile == NULL) {
+						ASSERT("An error occured while creating the output file (%s).\n", gpuOut);
+						return;
+					}
+
+					PRINT("Exporting %s.\n", gpuOut);
+
+					char* gpuData = ghoulBundleFile.GetFileGPU(i, k);
+
+					written = fwrite(gpuData, sizeof(char), ghoulBundleFile.gpuList[i].offsets[k].size, writeFile);
+
+					if (written != ghoulBundleFile.gpuList[i].offsets[k].size) {
+						ASSERT("An error occured while writing data to output file.\n");
+					}
+
+					flush = fflush(writeFile);
+
+					if (flush != 0) {
+						ASSERT("An error occured while flushing data to output file.\n");
+					}
+
+					fclose(writeFile);
+
+					free(gpuData);
+					free(gpuOut);
+				}
+				IncreaseCurrentSavedOnLoadingWidget();
+			}
+		}
+		if (fileType == GHOUL_DEMAND) {
+			char* dataOut = (char*)malloc(2048);
+			sprintf(dataOut, "%s\\export.data", outPath);
+
+			FILE* writeFile = fopen(dataOut, "wb");
+
+			if (writeFile == NULL) {
+				ASSERT("An error occured while creating the output file (%s).\n", dataOut);
+				return;
+			}
+
+			PRINT("Exporting %s.\n", dataOut);
+
+			char* data = ghoulDemandFile.GetDataSection();
+			size_t written = fwrite(data, 1, ghoulDemandFile.dataSectSize, writeFile);
+
+			if (written != ghoulDemandFile.dataSectSize) {
+				ASSERT("An error occured while writing data to output file.\n");
+			}
+
+			int32_t flush = fflush(writeFile);
+
+			if (flush != 0) {
+				ASSERT("An error occured while flushing data to output file.\n");
+			}
+
+			fclose(writeFile);
+
+			free((void*)data);
+			free((void*)dataOut);
+
+			for (int32_t i = 0; i < ghoulDemandFile.gpuList.entryCount; i++) {
+				char* gpuOut = (char*)malloc(2048);
+				sprintf(gpuOut, "%s\\export.gpu(%d)", outPath, i + 1);
+
+				writeFile = fopen(gpuOut, "wb");
+
+				if (writeFile == NULL) {
+					ASSERT("An error occured while creating the output file (%s).\n", gpuOut);
+					return;
+				}
+
+				PRINT("Exporting %s.\n", gpuOut);
+
+				char* gpuData = ghoulDemandFile.GetGpuSection(i);
+
+				written = fwrite(gpuData, sizeof(char), ghoulDemandFile.gpuList.entries[i].size, writeFile);
+
+				if (written != ghoulDemandFile.gpuList.entries[i].size) {
+					ASSERT("An error occured while writing data to output file.\n");
+				}
+
+				flush = fflush(writeFile);
+
+				if (flush != 0) {
+					ASSERT("An error occured while flushing data to output file.\n");
+				}
+
+				fclose(writeFile);
+
+				free(gpuData);
+				free(gpuOut);
 
 				IncreaseCurrentSavedOnLoadingWidget();
 			}
@@ -1624,7 +1760,7 @@ void displayProperties(float barHeight) {
 		switch (currentType)
 		{
 		case BUNDLEV36:
-			displayActiveFileProperty();
+			displayActiveBundleV36Property();
 			break;
 		case BUNDLEV40:
 			displayActiveV40BundleProperty();
@@ -1659,7 +1795,7 @@ void displayProperties(float barHeight) {
 	}
 }
 
-void displayActiveFileProperty() {
+void displayActiveBundleV36Property() {
 	if (fileIdx == -1) return;
 
 	char lbl[1024];
@@ -3055,6 +3191,11 @@ void displayActiveGhoulBundleProperty() {
 			int32_t len = ftell(importedFile);
 			fseek(importedFile, 0L, SEEK_SET);
 
+			if (ghoulBundleFile.dirtyFiles[fileId].newDataSect != nullptr) {
+				free(ghoulBundleFile.dirtyFiles[fileId].newDataSect);
+				ghoulBundleFile.dirtyFiles[fileId].newDataSect = nullptr;
+			}
+
 			ghoulBundleFile.dirtyFiles[fileId].newDataSect = (char*)malloc(len);
 
 			fread(ghoulBundleFile.dirtyFiles[fileId].newDataSect, 1, len, importedFile);
@@ -3082,6 +3223,10 @@ void displayActiveGhoulBundleProperty() {
 					int32_t len = ftell(importedFile);
 					fseek(importedFile, 0L, SEEK_SET);
 
+					if (ghoulBundleFile.dirtyFiles[fileId].gpuSects[i].newData != nullptr) {
+						free(ghoulBundleFile.dirtyFiles[fileId].gpuSects[i].newData);
+						ghoulBundleFile.dirtyFiles[fileId].gpuSects[i].newData = nullptr;
+					}
 					ghoulBundleFile.dirtyFiles[fileId].gpuSects[i].newData = (char*)malloc(len);
 
 					fread(ghoulBundleFile.dirtyFiles[fileId].gpuSects[i].newData, 1, len, importedFile);
@@ -3293,7 +3438,7 @@ void displayActiveRPKFileProperty() {
 
 void displayActiveStreamBundleFileProperty() {
 	if (imGuiWindowInfo.streamBundleSelectedBundle != -1) {
-		displayActiveFileProperty();
+		displayActiveBundleV36Property();
 		return;
 	}
 
@@ -3443,7 +3588,7 @@ void displayActiveStreamBundleFileProperty() {
 
 void displayActivePinataDbBundleFileProperty() {
 	if (imGuiWindowInfo.streamBundleSelectedBundle != -1) {
-		displayActiveFileProperty();
+		displayActiveBundleV36Property();
 		return;
 	}
 
@@ -3495,7 +3640,7 @@ void displayActivePinataDbBundleFileProperty() {
 
 void displayActivePinataPKGFileProperty() {
 	if (imGuiWindowInfo.streamBundleSelectedBundle != -1) {
-		displayActiveFileProperty();
+		displayActiveBundleV36Property();
 		return;
 	}
 

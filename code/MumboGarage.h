@@ -74,7 +74,7 @@ void displayBundleInfo();
 void displayBundleV40Info();
 void displayBundleV31Info();
 void displayStreamBundleInfo();
-void displayActiveFileProperty();
+void displayActiveBundleV36Property();
 void displayActiveV40BundleProperty();
 void displayActiveBundleV26Property();
 void displayActiveBundleV31Property();
