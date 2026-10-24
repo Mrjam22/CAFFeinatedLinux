@@ -96,7 +96,7 @@ static char* InflateData(char* inputData, int32_t level, size_t compedSize, size
 	strm.zfree = Z_NULL;
 	strm.opaque = Z_NULL;
 
-	if (inflateInit(&strm, level) != Z_OK) {
+	if (inflateInit(&strm) != Z_OK) {
 		printf("An error occured while trying to initialize inflate.\n");
 		free(in);
 		return inputData;
@@ -145,7 +145,7 @@ static char* InflateData(char* inputData, int32_t level, size_t compedSize, size
    invalid or incomplete, Z_VERSION_ERROR if the version of zlib.h and
    the version of the library linked do not match, or Z_ERRNO if there
    is an error reading or writing the files. */
-char* inf(FILE* source)
+inline char* inf(FILE* source)
 {
 	int32_t ret;
 	unsigned have;

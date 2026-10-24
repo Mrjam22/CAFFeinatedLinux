@@ -22,7 +22,7 @@ int HandleIndention(int type);
 
 ScriptWindowParams* GetScriptEditorWindowParameters();
 
-bool IsSpecialScriptEntry(dbScript_BanjoXEnum markerId) {
+inline bool IsSpecialScriptEntry(dbScript_BanjoXEnum markerId) {
 	//if (markerSizes[markerId] != 0x8) return true;
 	return false;
 }

@@ -20,7 +20,7 @@ void OpenLoadingPromptWidget() {
 void SetupLoadingPromptWidget(const char* message) {
 
 	loadingWidgetParams.showLoadingPrompt = true;
-	strcpy_s(loadingWidgetParams.loadingMessage, 1024, message);
+	strcpy(loadingWidgetParams.loadingMessage, message);
 }
 
 /// <summary>
@@ -66,7 +66,7 @@ void OpenLoadingBarPromptWidget() {
 void SetupLoadingBarPromptWidget(const char* message, int totalAmount) {
 
 	loadingBarWidgetParams.showLoadingBarPrompt = true;
-	strcpy_s(loadingBarWidgetParams.loadingMessage, 1024, message);
+	strcpy(loadingBarWidgetParams.loadingMessage, message);
 	loadingBarWidgetParams.totalAmount = totalAmount;
 	loadingBarWidgetParams.currentSaved = 0;
 }

@@ -21,10 +21,7 @@ void FireMessage(const char* message, ErrorType severity) {
 
 	ImGui::DebugLog("FIREMESSAGE - %s\n", message);
 
-	if (strlen(message) <= 1024) {
-		strcpy(errorPromptParams.errorMessage, message);
-	}
-	
+	strcpy(errorPromptParams.errorMessage, message);
 	errorPromptParams.errorSeverity = severity;
 
 	memset(title, 0, 256);

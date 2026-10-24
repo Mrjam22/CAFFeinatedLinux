@@ -7,10 +7,10 @@ void ChallengeNullDef::ParseHeader(char* data) {
 	int taskIDVar = 0;
 	int sizeVar = 0;
 
-	memcpy_s(&idVar, 4, data, 4);
-	memcpy_s(&unk1Var, 4, data + 4, 4);
-	memcpy_s(&taskIDVar, 4, data + 8, 4);
-	memcpy_s(&sizeVar, 4, data + 0xC, 4);
+	memcpy(&idVar, data, 4);
+	memcpy(&unk1Var, data + 4, 4);
+	memcpy(&taskIDVar, data + 8, 4);
+	memcpy(&sizeVar, data + 0xC, 4);
 
 	header.reqId = (dbChallengeRequirement_e)flipEndian(idVar);
 	header.unk1 = flipEndian(unk1Var);
@@ -36,27 +36,19 @@ void ChallengeCommonDef::ParseCommon(char* data) {
 	memset(specialObjectTag02, 0, 0x40);
 	memset(specialObjectIndicator02, 0, 0x40);
 
-	strcpy_s(worldNameTag, 0x20, data + 0x10);
-	strcpy_s(challengeTag, 0x20, data + 0x30);
-	strcpy_s(gameStyleTag, 0x20, data + 0x50);
-	
-	memcpy(&ttMinTime, data + 0x2C8, sizeof(int32_t));
-	memcpy(&ttMaxJiggyMinTime, data + 0x2CC, sizeof(int32_t));
-	memcpy(&jiggyMaxNotesMinTime, data + 0x2D0, sizeof(int32_t));
-	memcpy(&notesMaxTime, data + 0x2D4, sizeof(int32_t));
-	
-	ttMinTime = flipEndian_f32((char*)&ttMinTime, 1);
-	ttMaxJiggyMinTime = flipEndian_f32((char*)&ttMaxJiggyMinTime, 1);
-	jiggyMaxNotesMinTime = flipEndian_f32((char*)&jiggyMaxNotesMinTime, 1);
-	notesMaxTime = flipEndian_f32((char*)&notesMaxTime, 1);
+	strcpy(worldNameTag, data + 0x10);
+	strcpy(challengeTag, data + 0x30);
+	strcpy(gameStyleTag, data + 0x50);
+
+
 }
 
 void challengeStayInVehicle::ParseStayInVehicle(char* data) {
 	int canPlayersGetOutVar = 0; // 0x10
 	int canBaddiesGetOutVar = 0; // 0x14
 
-	memcpy_s(&canPlayersGetOutVar, 4, data + 0x10, 4);
-	memcpy_s(&canBaddiesGetOutVar, 4, data + 0x14, 4);
+	memcpy(&canPlayersGetOutVar, data + 0x10, 4);
+	memcpy(&canBaddiesGetOutVar, data + 0x14, 4);
 
 	canPlayersGetOut = flipEndian(canPlayersGetOutVar);
 	canBaddiesGetOut = flipEndian(canBaddiesGetOutVar);

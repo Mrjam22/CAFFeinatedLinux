@@ -745,4 +745,3 @@ public:
 		textureDataPtr = ptr;
 	}
 };
-#endif

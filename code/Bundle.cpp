@@ -1180,19 +1180,16 @@ char* BundleV36::getFileData(char* fileName, int32_t fileInfoIdx) {
 			return NULL;
 		}
 
-		memcpy_s(data, sectCompedSize, bundleData + totalOffsetToDataSect + sectionOffset, sectCompedSize);
+		memcpy(data, bundleData + totalOffsetToDataSect + sectionOffset, sectCompedSize);
 
 		char* outputData = InflateData(data, 6, sectCompedSize, sectUncompedSize);
 
-		memcpy_s(sect, sectionTable.fileInfos[fileInfoIdx].size, outputData + sectionTable.fileInfos[fileInfoIdx].start, sectionTable.fileInfos[fileInfoIdx].size);
-
-		free(data);
-		free(outputData);
+		memcpy(sect, outputData + sectionTable.fileInfos[fileInfoIdx].dataOffset, sectionTable.fileInfos[fileInfoIdx].dataSize);
 
 		return sect;
 	}
 
-	memcpy_s(sect, sectionTable.fileInfos[fileInfoIdx].size, (bundleData + totalOffsetToDataSect + sectionOffset + sectionTable.fileInfos[fileInfoIdx].start), sectionTable.fileInfos[fileInfoIdx].size);
+	memcpy(sect, (bundleData + totalOffsetToDataSect + sectionOffset + sectionTable.fileInfos[fileInfoIdx].dataOffset), sectionTable.fileInfos[fileInfoIdx].dataSize);
 
 	printf("Bundle::getFileData() - File Data for entry %d successfully obtained.\n", fileInfoIdx);
 
@@ -1272,14 +1269,10 @@ bool BundleV31::readBundleFileV0031(char* data) {
 
 		int32_t position = 0x40;
 		for (int32_t i = 0; i < header.numSectionTypes; i++) {
-			memcpy_s(sectionEntries[i].sectionType, 11, data + position, 11);
-			memcpy(&sectionEntries[i].alignment, data + position + 0xB, sizeof(int8_t));
-			memcpy(&sectionEntries[i].poolSection, data + position + 0xC, sizeof(int32_t));
-			memcpy(&sectionEntries[i].size, data + position + 0x10, sizeof(int32_t));
-			memcpy(&sectionEntries[i].base, data + position + 0x14, sizeof(int32_t));
-			memcpy(&sectionEntries[i].offset, data + position + 0x18, sizeof(int32_t));
-			memcpy(&sectionEntries[i].overlap, data + position + 0x1C, sizeof(int32_t));
-			memcpy(&sectionEntries[i].loadSize, data + position + 0x20, sizeof(int32_t));
+			memcpy(sectionEntries[i].sectionName, data + position, 8);
+			memcpy(&sectionEntries[i].unk1, data + position + 0x8, sizeof(int32_t));
+			memcpy(&sectionEntries[i].unk2, data + position + 0xC, sizeof(int32_t));
+			memcpy(&sectionEntries[i].uncompressedSize, data + position + 0x10, sizeof(int32_t));
 			memcpy(&sectionEntries[i].compressedSize, data + position + 0x24, sizeof(int32_t));
 
 			if (header.byteswapFlags == 1) {
@@ -1323,7 +1316,7 @@ bool BundleV31::readBundleFileV0031(char* data) {
 			for (int32_t i = 0; i < header.numAssets; i++) {
 				int32_t length = strlen(dataSect + strTablePos + fileInfoTable.debugTable.stringTableOffsets[i]);
 				fileInfoTable.debugTable.fileNames[i] = new char[length + 1]();
-				strcpy_s(fileInfoTable.debugTable.fileNames[i], length + 1, dataSect + strTablePos + fileInfoTable.debugTable.stringTableOffsets[i]);
+				strcpy(fileInfoTable.debugTable.fileNames[i], dataSect + strTablePos + fileInfoTable.debugTable.stringTableOffsets[i]);
 
 				printf("FILE %d - %s\n", i, fileInfoTable.debugTable.fileNames[i]);
 			}
@@ -1350,7 +1343,7 @@ bool BundleV31::readBundleFileV0031(char* data) {
 		// Legacy check.
 		char* base = new char[0x20];
 
-		strcpy_s(base, 0x20, dataSect);
+		strcpy(base, dataSect);
 
 		type = V31_Unknown;
 
@@ -1367,7 +1360,7 @@ bool BundleV31::readBundleFileV0031(char* data) {
 		}
 
 		if (strcmp(base, "text") == 0) {
-			strcpy_s(base, 0x20, dataSect + 5);
+			strcpy(base, dataSect + 5);
 
 			if (strcmp(base, "04.05.05.0032") == 0) {
 				type = V31_Text;
@@ -1438,11 +1431,11 @@ char* BundleV31::getSectionData(int32_t section) {
 
 		printf("Offset - %d.\n", getOffsetOfSection(section));
 
-		memcpy_s(data, sectCompedSize, bundleData + header.headerSize + getOffsetOfSection(section), sectCompedSize);
+		memcpy(data, bundleData + header.headerSize + getOffsetOfSection(section), sectCompedSize);
 
 		char* outData = InflateData(data, 6, sectCompedSize, sectUncompedSize);
 
-		memcpy_s(sectData, sectUncompedSize, outData, sectUncompedSize);
+		memcpy(sectData, outData, sectUncompedSize);
 
 		free(outData);
 		free(data);
@@ -1450,7 +1443,7 @@ char* BundleV31::getSectionData(int32_t section) {
 		return sectData;
 	}
 
-	memcpy_s(sectData, sectionEntries[section].size, bundleData + header.headerSize + getOffsetOfSection(section), sectionEntries[section].size);
+	memcpy(sectData, bundleData + header.headerSize + getOffsetOfSection(section), sectionEntries[section].uncompressedSize);
 
 	return sectData;
 }
@@ -1488,16 +1481,16 @@ char* BundleV31::getFileData(char* fileName, int32_t fileInfoIdx) {
 			return NULL;
 		}
 
-		memcpy_s(data, sectCompedSize, bundleData + totalOffsetToDataSect + sectionOffset, sectCompedSize);
+		memcpy(data, bundleData + totalOffsetToDataSect + sectionOffset, sectCompedSize);
 
 		char* outputData = InflateData(data, 6, sectCompedSize, sectUncompedSize);
 
-		memcpy_s(sect, fileInfoTable.fileInfoEntries[fileInfoIdx].size, outputData + fileInfoTable.fileInfoEntries[fileInfoIdx].start, fileInfoTable.fileInfoEntries[fileInfoIdx].size);
+		memcpy(sect, outputData + fileInfoTable.fileInfoEntries[fileInfoIdx].dataOffset, fileInfoTable.fileInfoEntries[fileInfoIdx].dataSize);
 
 		return sect;
 	}
 
-	memcpy_s(sect, fileInfoTable.fileInfoEntries[fileInfoIdx].size, (bundleData + totalOffsetToDataSect + sectionOffset + fileInfoTable.fileInfoEntries[fileInfoIdx].start), fileInfoTable.fileInfoEntries[fileInfoIdx].size);
+	memcpy(sect, (bundleData + totalOffsetToDataSect + sectionOffset + fileInfoTable.fileInfoEntries[fileInfoIdx].dataOffset), fileInfoTable.fileInfoEntries[fileInfoIdx].dataSize);
 
 	printf("Bundle::getFileData() - File Data for entry %d successfully obtained.\n", fileInfoIdx);
 
@@ -1557,8 +1550,8 @@ bool BundleV26::readBundleFileV0026(char* data) {
 
 		int32_t position = 0x38;
 		for (int32_t i = 0; i < header.numSectionTypes; i++) {
-			memcpy_s(sectionEntries[i].sectionName, 8, data + position, 8);
-			memcpy(&sectionEntries[i].size, data + position + 0x8, sizeof(int32_t));
+			memcpy(sectionEntries[i].sectionName, data + position, 8);
+			memcpy(&sectionEntries[i].uncompressedSize, data + position + 0x8, sizeof(int32_t));
 			memcpy(&sectionEntries[i].unk1, data + position + 0xC, sizeof(int32_t));
 			memcpy(&sectionEntries[i].compressedSize, data + position + 0x20, sizeof(int32_t));
 
@@ -1586,7 +1579,7 @@ bool BundleV26::readBundleFileV0026(char* data) {
 			for (int32_t i = 0; i < header.numOfFiles; i++) {
 				int32_t length = strlen(dataSect + strTablePos + fileInfoTable.debugTable.stringTableOffsets[i]);
 				fileInfoTable.debugTable.fileNames[i] = new char[length + 1]();
-				strcpy_s(fileInfoTable.debugTable.fileNames[i], length + 1, dataSect + strTablePos + fileInfoTable.debugTable.stringTableOffsets[i]);
+				strcpy(fileInfoTable.debugTable.fileNames[i], dataSect + strTablePos + fileInfoTable.debugTable.stringTableOffsets[i]);
 
 				printf("FILE %d - %s\n", i, fileInfoTable.debugTable.fileNames[i]);
 			}
@@ -1606,7 +1599,7 @@ bool BundleV26::readBundleFileV0026(char* data) {
 
 		char* base = new char[0x20];
 
-		strcpy_s(base, 0x20, dataSect);
+		strcpy(base, dataSect);
 
 		type = V31_Unknown;
 
@@ -1623,7 +1616,7 @@ bool BundleV26::readBundleFileV0026(char* data) {
 		}
 
 		if (strcmp(base, "text") == 0) {
-			strcpy_s(base, 0x20, dataSect + 5);
+			strcpy(base, dataSect + 5);
 
 			if (strcmp(base, "04.05.05.0032") == 0) {
 				type = V31_Text;
@@ -1681,11 +1674,11 @@ char* BundleV26::getSectionData(int32_t section) {
 
 		printf("Offset - %d.\n", getOffsetOfSection(section));
 
-		memcpy_s(data, sectCompedSize, bundleData + header.headerSize + getOffsetOfSection(section), sectCompedSize);
+		memcpy(data, bundleData + header.headerSize + getOffsetOfSection(section), sectCompedSize);
 
 		char* outData = InflateData(data, 6, sectCompedSize, sectUncompedSize);
 
-		memcpy_s(sectData, sectUncompedSize, outData, sectUncompedSize);
+		memcpy(sectData, outData, sectUncompedSize);
 
 		free(outData);
 		free(data);
@@ -1693,7 +1686,7 @@ char* BundleV26::getSectionData(int32_t section) {
 		return sectData;
 	}
 
-	memcpy_s(sectData, sectionEntries[section].size, bundleData + header.headerSize + getOffsetOfSection(section), sectionEntries[section].size);
+	memcpy(sectData, bundleData + header.headerSize + getOffsetOfSection(section), sectionEntries[section].uncompressedSize);
 
 	return sectData;
 }
@@ -1731,16 +1724,16 @@ char* BundleV26::getFileData(char* fileName, int32_t fileInfoIdx) {
 			return NULL;
 		}
 
-		memcpy_s(data, sectCompedSize, bundleData + totalOffsetToDataSect + sectionOffset, sectCompedSize);
+		memcpy(data, bundleData + totalOffsetToDataSect + sectionOffset, sectCompedSize);
 
 		char* outputData = InflateData(data, 6, sectCompedSize, sectUncompedSize);
 
-		memcpy_s(sect, fileInfoTable.fileInfoEntries[fileInfoIdx].size, outputData + fileInfoTable.fileInfoEntries[fileInfoIdx].start, fileInfoTable.fileInfoEntries[fileInfoIdx].size);
+		memcpy(sect, outputData + fileInfoTable.fileInfoEntries[fileInfoIdx].dataOffset, fileInfoTable.fileInfoEntries[fileInfoIdx].dataSize);
 
 		return sect;
 	}
 
-	memcpy_s(sect, fileInfoTable.fileInfoEntries[fileInfoIdx].size, (bundleData + totalOffsetToDataSect + sectionOffset + fileInfoTable.fileInfoEntries[fileInfoIdx].start), fileInfoTable.fileInfoEntries[fileInfoIdx].size);
+	memcpy(sect, (bundleData + totalOffsetToDataSect + sectionOffset + fileInfoTable.fileInfoEntries[fileInfoIdx].dataOffset), fileInfoTable.fileInfoEntries[fileInfoIdx].dataSize);
 
 	printf("Bundle::getFileData() - File Data for entry %d successfully obtained.\n", fileInfoIdx);
 
