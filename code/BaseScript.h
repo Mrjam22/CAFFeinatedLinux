@@ -1,5 +1,8 @@
 #pragma once
+#ifndef _SCRIPT
+#define _SCRIPT
 #include "CommonReader.h"
+#include <vector>
 
 static const char* dbScriptNames[] = {
 	"dbScript_Null", // Only used for the end of the script.
@@ -343,6 +346,11 @@ enum dbScript_BanjoXEnum : int32_t {
 	dbScript_Play_MovieRandomSelection
 };
 
+inline const char* GetScriptName_BanjoX(int idx) {
+	if (idx >= 168) return dbScriptNames[0];
+	return dbScriptNames[idx];
+}
+
 class dbScript_Base {
 public:
 	int32_t entrySize;
@@ -371,8 +379,22 @@ public:
 	}
 };
 
+class dbScript_SetupPreLoadAsset : public dbScript_Base {
+public:
+	int32_t unk1;
+	uint32_t bundle;
+	uint32_t streamBundle;
+
+	void readScriptData(char* data) {
+		memcpy(&unk1, data + 8, sizeof(int32_t));
+		memcpy(&bundle, data + 0xC, sizeof(int32_t));
+		memcpy(&streamBundle, data + 0x10, sizeof(int32_t));
+	}
+};
+
 inline dbScript_Base* CreateScriptData(dbScript_BanjoXEnum markerType) {
 	switch (markerType) {
+	case dbScript_Setup_PreLoadAsset: { printf("PRELOAD ASSET\n"); return new dbScript_SetupPreLoadAsset(); } break;
 	case dbScript_Debug_Printf: { printf("DEBUG PRINTF\n"); return new dbScript_DebugPrintf(); } break;
 	default: { printf("BASE\n"); return new dbScript_Base(); } break;
 	}
@@ -385,48 +407,19 @@ public:
 	bool isReady = false;
 
 	int32_t numOfScriptEntries = 0;
-	dbScript_Base** scriptEntries;
+	std::vector<dbScript_Base*> scriptEntries;
 
 	void ReadScriptFile(char* data) {
 		if (data == nullptr) return;
 		fileData = data;
 
-		bool hasInitialEntryStarted = false;
+		int32_t index = 0;
 		int32_t offs = 0;
 
-		int32_t index = 0;
-		// settle the marker count.
-		while (true) {
-			int32_t size = 0;
-			int32_t type = 0;
-
-			memcpy(&size, fileData + offs, 4);
-			memcpy(&type, fileData + offs + 4, 4);
-
-			size = flipEndian(size);
-			type = flipEndian(type);
-
-			printf("Entry %d\t->\t%d\n", index, size);
-
-			//char* markerData = (char*)malloc(size);
-
-			numOfScriptEntries++;
-			if (type == 0) {
-				break;
-			}
-
-			offs += size;
-			index++;
-		}
-
-		offs = 0;
-		scriptEntries = new dbScript_Base*[numOfScriptEntries];
-
 		// set up the markers.
-		for (int32_t i = 0; i < numOfScriptEntries; i++) {
-			int32_t size = 0;
-			int32_t type = 0;
-
+		int32_t size = 0;
+		int32_t type = 1;
+		while (type != 0) {
 			memcpy(&size, fileData + offs, 4);
 			memcpy(&type, fileData + offs + 4, 4);
 
@@ -435,22 +428,21 @@ public:
 
 			char* markerData = (char*)malloc(size);
 			memcpy(markerData, fileData + offs, size);
-			scriptEntries[i] = CreateScriptData((dbScript_BanjoXEnum)type);
+			scriptEntries.push_back(CreateScriptData((dbScript_BanjoXEnum)type));
 
-			scriptEntries[i]->readCommonScriptData(markerData);
+			scriptEntries[index]->readCommonScriptData(markerData);
 
-			printf("Entry %05d\t->\t[%s]\n", i, dbScriptNames[scriptEntries[i]->entryType]);
+			printf("Entry %05d\t->\t[%s]\n", index, dbScriptNames[scriptEntries[index]->entryType]);
 
-			switch (scriptEntries[i]->entryType) {
-			case dbScript_Debug_Printf: {
-				((dbScript_DebugPrintf*)scriptEntries[i])->readScriptData(markerData);
-			}
-			break;
+			switch (scriptEntries[index]->entryType) {
+			case dbScript_Debug_Printf: { ((dbScript_DebugPrintf*)scriptEntries[index])->readScriptData(markerData); } break;
+			case dbScript_Setup_PreLoadAsset: { ((dbScript_SetupPreLoadAsset*)scriptEntries[index])->readScriptData(markerData); } break;
 			}
 
+			index++;
 			offs += size;
-
 			free(markerData);
 		}
 	}
 };
+#endif

@@ -1,6 +1,7 @@
 #include "CommonReader.h"
 #include "AssetCommons.h"
 #include "PinataDBBundle.h"
+#include "LoadingProcess.h"
 #include "Bundle.h"
 
 char* DBBundle::getFileData(int32_t fileIdx, int32_t* dataSize) {
@@ -49,7 +50,9 @@ char* DBBundle::getFileData(int32_t fileIdx, int32_t* dataSize) {
 
 	fclose(packFile);
 
-	*dataSize = fullCaffSize;
+	if (dataSize != nullptr) {
+		*dataSize = fullCaffSize;
+	}
 
 	return fullCaffData;
 }
@@ -79,8 +82,6 @@ bool DBBundle::readStandaloneDbBundleFiles(char* filePath) {
 		idxFile = fopen(indexFilePath, "rb");
 
 		if (idxFile != 0) {
-			fclose(idxFile);
-			return false;
 			isTiPIndexFile = true;
 		}
 	}
@@ -113,24 +114,44 @@ bool DBBundle::readStandaloneDbBundleFiles(char* filePath) {
 	fseek(idxFile, 0L, SEEK_SET);
 
 	uint32_t number_of_lines = 0;
-	int32_t ch;
-	while (EOF != (ch = getc(idxFile)))
-		if ('\n' == ch)
+	if (!isTiPIndexFile) {
+		char ch[256];
+		while (!feof(idxFile)) {
+			fgets(ch, 256, idxFile);
 			++number_of_lines;
+		}
+
+		printf("%s - idx %d.\n", __func__, length);
+	}
 
 	fclose(idxFile);
-
-	printf("%s - idx %d.\n", __func__, length);
 
 	char* inputIndexData = indexData;
 	if (isTiPIndexFile) {
 		int32_t uncompedSize = 0;
 		memcpy(&uncompedSize, indexData, 4);
-		uncompedSize = flipEndian(uncompedSize);
+		if ((uncompedSize & 0xFF) == 0) {
+			uncompedSize = flipEndian(uncompedSize);
+			isBigEndian = true;
+		}
 
 		inputIndexData = InflateData(indexData + 4, 9, length - 4, uncompedSize);
 
 		free(indexData);
+	}
+
+	if (isTiPIndexFile) {
+		int32_t charRead = 0;
+		char* offs = inputIndexData;
+
+		int count = 0;
+
+		number_of_lines++;
+		while (offs = strchr(offs + 1, '\n'), offs != 0) {
+			++number_of_lines;
+		}
+
+		printf("%s - idx %d.\n", __func__, number_of_lines);
 	}
 
 	fseek(hashFile, 0L, SEEK_END);
@@ -161,86 +182,129 @@ void DBBundle::readDbBundleFiles(char* hashData, char* indexData, int32_t totalI
 	indexFileData = indexData;
 	indexCount = totalIndexCount;
 
-	int32_t fileCount = 0;
+	
+	memcpy(&hashFile.fileCount, hashData, 4);
 
-	memcpy(&fileCount, hashData, 4);
+	if ((hashFile.fileCount & 0xFF) == 0) {
+		hashFile.fileCount = flipEndian(hashFile.fileCount);
+		isBigEndian = true;
+	}
 
-	hashFile.fileCount = flipEndian(fileCount);
-
-	printf("%s - %d.\n", __func__, hashFile.fileCount);
+	printf("%s - %d files found.\n", __func__, hashFile.fileCount);
 
 	// Parse the Hash File Data first.
 	int32_t hashBasePos = 4;
 	int32_t offsetBasePos = 4 + (hashFile.fileCount * 4);
 
+	hashFile.hashArray = new uint64_t[hashFile.fileCount];
 	if (isTiPIndexFile) {
-		hashFile.hash64_Array = new uint64_t[hashFile.fileCount];
 		offsetBasePos = 4 + (hashFile.fileCount * 8);
-	}
-	else {
-		hashFile.hash32_Array = new uint32_t[hashFile.fileCount];
 	}
 
 	hashFile.offsetArray = new int32_t[hashFile.fileCount];
 
 	precachedEntries = new PrecacheEntry[hashFile.fileCount];
 
-	memset(precachedEntries, 0, sizeof(PrecacheEntry) * hashFile.fileCount);
+	memset(precachedEntries, 0xFF, sizeof(PrecacheEntry) * hashFile.fileCount);
 
 	indexFile = new IndexEntry[totalIndexCount];
 	memset(indexFile, 0, sizeof(IndexEntry) * totalIndexCount);
+
+	CloseLoadingPromptWidget();
+	SetupLoadingBarPromptWidget("Loading contents of debug_hash.bin", hashFile.fileCount);
 
 	// Get the hash & offsets first...
 	for (int32_t i = 0; i < hashFile.fileCount; i++) {
 		int32_t offset = 0;
 
 		if (isTiPIndexFile) {
-			uint32_t hash = 0;
-			memcpy(&hash, hashData + hashBasePos + (i * 8), 8);
-			hashFile.hash64_Array[i] = flipEndian(hash);
+			memcpy(&hashFile.hashArray[i], hashData + hashBasePos + (i * 8), 8);
+			if (isBigEndian) {
+				hashFile.hashArray[i] = flipEndian(hashFile.hashArray[i]);
+			}
 		}
 		else {
-			uint32_t hash = 0;
+			int32_t hash = 0;
 			memcpy(&hash, hashData + hashBasePos + (i * 4), 4);
-			hashFile.hash32_Array[i] = flipEndian(hash);
+			if (isBigEndian) {
+				hashFile.hashArray[i] = flipEndian(hash);
+			}
+			else {
+				hashFile.hashArray[i] = hash;
+			}
 		}
 
-		memcpy(&offset, hashData + offsetBasePos + (i * 4), 4);
-
-		hashFile.offsetArray[i] = flipEndian(offset);
+		memcpy(&hashFile.offsetArray[i], hashData + offsetBasePos + (i * 4), 4);
+		if (isBigEndian) {
+			hashFile.offsetArray[i] = flipEndian(hashFile.offsetArray[i]);
+		}
 
 		if (isTiPIndexFile) {
-			printf("HASH ENTRY %d - [%llX %d]\n", i, hashFile.hash64_Array[i], hashFile.offsetArray[i]);
+			//printf("HASH ENTRY %d - [%016llX %d]\n", i, hashFile.hashArray[i], hashFile.offsetArray[i]);
 		}
 		else {
-			printf("HASH ENTRY %d - [%08X %d]\n", i, hashFile.hash32_Array[i], hashFile.offsetArray[i]);
+			//printf("HASH ENTRY %d - [%08X %d]\n", i, hashFile.hashArray[i], hashFile.offsetArray[i]);
 		}
+
+		IncreaseCurrentSavedOnLoadingWidget();
 	}
 
+	if (isTiPIndexFile) {
+		SetupLoadingBarPromptWidget("Pre-caching the contents of db_index.bin", totalIndexCount);
+	}
+	else {
+		SetupLoadingBarPromptWidget("Pre-caching the contents of db_index.txt", totalIndexCount);
+	}
+	
 	// ...and now we get the available names.
 	int32_t charRead = 0;
 	for (int32_t i = 0; i < totalIndexCount; i++) {
+		int count = 0;
 		memset(indexFile[i].filename, 0, 256);
-		sscanf(indexData + charRead, "%s %d %f", indexFile[i].filename, &indexFile[i].timestamp, &indexFile[i].version);
+		sscanf(indexData + charRead, "%s %d %f%n", indexFile[i].filename, &indexFile[i].timestamp, &indexFile[i].version, &count);
 
-		indexFile[i].hash = assetIdGetHash_Base(indexFile[i].filename);
+		int32_t hash = 0;
+		if (isTiPIndexFile) {
+			indexFile[i].hash = assetIdGetHash_BaseExt(indexFile[i].filename);
+			if (!isBigEndian) {
+				indexFile[i].hash = flipEndian(indexFile[i].hash);
+			}
+		}
+		else {
+			int32_t hash = assetIdGetHash_Base(indexFile[i].filename);
+			indexFile[i].hash = hash;
+		}
 
-		charRead += strlen(indexFile[i].filename) + 0x13;
+		
+		charRead += count;
 
-		printf("%s %d %f\n", indexFile[i].filename, indexFile[i].timestamp, indexFile[i].version);
+		//printf("%s %d %f\n", indexFile[i].filename, indexFile[i].timestamp, indexFile[i].version);
 
 		int32_t idx = getIdxOfFile(indexFile[i].hash);
 		if (idx != -1) {
 
 			precachedEntries[idx].hashIdx = idx;
 			precachedEntries[idx].indexIdx = i;
-			printf("ENTRY %d - String %s correlates to known hash %08X.\n", i, indexFile[i].filename, indexFile[i].hash);
+			if (isTiPIndexFile) {
+				//printf("ENTRY %d - String %s correlates to known hash 0x%016I64x.\n", i, indexFile[i].filename, indexFile[i].hash);
+			}
+			else {
+				//printf("ENTRY %d - String %s correlates to known hash 0x%08X.\n", i, indexFile[i].filename, indexFile[i].hash);
+			}
 		}
 
 		if (idx == -1) {
-			printf("ENTRY %d - Hash of string %s (%08X) isn't present in index_hash.\n", i, indexFile[i].filename, indexFile[i].hash);
+			if (isTiPIndexFile) {
+				//printf("ENTRY %d - Hash of string %s (0x%016I64x) isn't present in index_hash.\n", i, indexFile[i].filename, indexFile[i].hash);
+			}
+			else {
+				//printf("ENTRY %d - Hash of string %s (0x%08X) isn't present in index_hash.\n", i, indexFile[i].filename, indexFile[i].hash);
+			}
 		}
+		IncreaseCurrentSavedOnLoadingWidget();
 	}
+
+	CloseLoadingBarPromptWidget();
 
 	isReady = true;
 }
@@ -258,14 +322,9 @@ void DBBundle::ClearActiveBundleData() {
 		}
 
 		hashFile.fileCount = 0;
-		if (hashFile.hash32_Array != nullptr) {
-			delete[] hashFile.hash32_Array;
-			hashFile.hash32_Array = nullptr;
-		}	
-
-		if (hashFile.hash64_Array != nullptr) {
-			delete[] hashFile.hash64_Array;
-			hashFile.hash64_Array = nullptr;
+		if (hashFile.hashArray != nullptr) {
+			delete[] hashFile.hashArray;
+			hashFile.hashArray = nullptr;
 		}
 
 		if (hashFile.offsetArray != nullptr) {

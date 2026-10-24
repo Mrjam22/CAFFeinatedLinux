@@ -1,6 +1,9 @@
 #pragma once
 #include "CommonReader.h"
 
+// Enables verbosity on the hashing code.
+const bool VERBOSE_PRINTOUT = false;
+
 /// <summary>
 /// A large array of bytes (1024 entries) that are used for generating the aid hash for Nuts & Bolts and Kinect Sports.
 /// </summary>
@@ -950,6 +953,135 @@ static const uint32_t typed_HashArray[] = {
 /// <summary>
 /// A list of the available asset types the game supports.
 /// </summary>
+static const char* kinectSports_AssetArray[] = {
+	"grammar",
+	"texture",
+	"anim",
+	"cant_reuse_see_below01",
+	"model",
+	"havok",
+	"animevents",
+	"cant_reuse_see_below02",
+	"cutscene",
+	"cutsceneevents",
+	"cant_reuse_see_below03",
+	"misc",
+	"cant_reuse_see_below04",
+	"marker",
+	"callout",
+	"aidlist",
+	"cant_reuse_see_below05",
+	"loctext",
+	"cant_reuse_see_below06",
+	"cant_reuse_see_below07",
+	"cant_reuse_see_below08",
+	"cant_reuse_see_below09",
+	"font",
+	"tutorial",
+	"cant_reuse_see_below10",
+	"script",
+	"cant_reuse_see_below11",
+	"fxemitter",
+	"fxparticle",
+	"fxrumble",
+	"fxcamshake",
+	"objparams",
+	"animtable",
+	"cant_reuse_see_below12",
+	"cant_reuse_see_below13",
+	"scripttable",
+	"cant_reuse_see_below14",
+	"cant_reuse_see_below15",
+	"cant_reuse_see_below16",
+	"cant_reuse_see_below17",
+	"cant_reuse_see_below18",
+	"cant_reuse_see_below19",
+	"cant_reuse_see_below20",
+	"cant_reuse_see_below21",
+	"cant_reuse_see_below22",
+	"cant_reuse_see_below23",
+	"cant_reuse_see_below24",
+	"cant_reuse_see_below25",
+	"cant_reuse_see_below26",
+	"cant_reuse_see_below27",
+	"cant_reuse_see_below28",
+	"cant_reuse_see_below29",
+	"cant_reuse_see_below30",
+	"cant_reuse_see_below31",
+	"xmv",
+	"luascript",
+	"cant_reuse_see_below32",
+	"cant_reuse_see_below33",
+	"cant_reuse_see_below34",
+	"cant_reuse_see_below35",
+	"cant_reuse_see_below36",
+	"cant_reuse_see_below37",
+	"cant_reuse_see_below38",
+	"cant_reuse_see_below39",
+	"cant_reuse_see_below40",
+	"vertexshader",
+	"pixelshader",
+	"dll",
+	"cant_reuse_see_below41",
+	"gpuparticleeffect",
+	"cant_reuse_see_below42",
+	"cant_reuse_see_below43",
+	"cant_reuse_see_below44",
+	"cant_reuse_see_below45",
+	"3dgpuparticleeffect",
+	"compositeeffect",
+	"cant_reuse_see_below46",
+	"ddstexture",
+	"cant_reuse_see_below47",
+	"bundle",
+	"streambundle",
+	"cant_reuse_see_below48",
+	"cant_reuse_see_below49",
+	"cant_reuse_see_below50",
+	"cant_reuse_see_below51",
+	"cant_reuse_see_below52",
+	"cant_reuse_see_below53",
+	"sport",
+	"crowd",
+	"team",
+	"stadium",
+	"assetref",
+	"formation",
+	"gesture",
+	"cant_reuse_see_below54",
+	"cant_reuse_see_below55",
+	"scenecontroller",
+	"wwiseproject",
+	"shader",
+	"skeletonrecording",
+	"cant_reuse_see_below56",
+	"bundlelookup",
+	"soundscape",
+	"cant_reuse_see_below57",
+	"cant_reuse_see_below58",
+	"cant_reuse_see_below59",
+	"gfxmovie",
+	"xavatarasset",
+	"costume",
+	"cant_reuse_see_below60",
+	"preset",
+	"character",
+	"havokanimation",
+	"havokbehavior",
+	"xavatar",
+	"cutscenecomposite",
+	"entity",
+	"component",
+	"componentupdatepolicy",
+	"componentmanager",
+	"commentary",
+	"sportmanavatar",
+	"max"
+};
+
+/// <summary>
+/// A list of the available asset types the game supports.
+/// </summary>
 static const char* nutsNBolts_AssetArray[] = {
 	"vehicle", // 0x00
 	"texture", // 0x01
@@ -1158,6 +1290,23 @@ static int32_t GetAssetIDFromType(char* type) {
 	} while (true);
 }
 
+static int32_t GetAssetIDFromType_KinectSports(char* type) {
+	int32_t iVar4 = 0;
+	char iVar5[64];
+	char* paVar3 = {};
+
+	do {
+		strcpy(iVar5, kinectSports_AssetArray[iVar4]);
+		if (strcmp(type, iVar5) == 0) {
+			return iVar4;
+		}
+		iVar4 = iVar4 + 1;
+		if (iVar4 >= 0x7A) {
+			return 0x7A;
+		}
+	} while (true);
+}
+
 // Gets the type ID from the array of available types found in Trouble In Paradise.
 static int32_t GetAssetIDFromType_TroubleInParadise(char* type) {
 	int32_t iVar4 = 0;
@@ -1177,9 +1326,19 @@ static int32_t GetAssetIDFromType_TroubleInParadise(char* type) {
 }
 
 static char* assetGetAidStringFromPath(char* str) {
-	if (!strstr(str, "UberRoot")) return str;
+	char* uberPtr = strstr(str, "UberRoot");
+	if (!uberPtr) return str;
 
-	
+	char* sec1 = uberPtr + 9;
+}
+
+static int32_t assetGetTypeIDFromPath(char* str) {
+	char* uberPtr = strstr(str, "UberRoot");
+	if (!uberPtr) return 0;
+
+	char* sec1 = uberPtr + 9;
+	if (strncmp(sec1, "loc", 3) == 0) return 0x11;
+	if (strncmp(sec1 + 4, "text", 4) == 0) return 0x11;
 }
 
 /// <summary>
@@ -1227,10 +1386,10 @@ static uint16_t locHashElfHash16(char* str)
 /// <param name="str"></param>
 /// <returns>An unsigned integer containing the hash.</returns>
 static uint32_t assetIdGetHash_Typed(char* str) {
-	printf("Inserted file %s\n", str);
+	if (VERBOSE_PRINTOUT) printf("Inserted file %s\n", str);
 
 	if (*str == '\0') {
-		printf("A blank string has been used for assetIdGetHash_NutsBolts(), this won't do anything.\n", str);
+		printf("A blank string has been used for assetIdGetHash_Typed(), this won't do anything.\n", str);
 		return 0;
 	}
 
@@ -1249,20 +1408,19 @@ static uint32_t assetIdGetHash_Typed(char* str) {
 
 		// Gets the type from the provided string.
 		assetGetTypeFromString(curVal, type);
-		printf("Aid Type -> \"%s\"\n", type);
+		if (VERBOSE_PRINTOUT) printf("Aid Type -> \"%s\"\n", type);
 
 		// Gets the type ID from the type string.
 		int32_t idx = GetAssetIDFromType(type);
-		printf("Aid ID -> %d\n", idx);
+		if (VERBOSE_PRINTOUT) printf("Aid ID -> %d\n", idx);
 
 		// Shift the retrieved value as we will be appending it to our hash.
 		adjustedIdx = (idx & 0xFF) << 0x18;
-		printf("Type -> %08x\n", adjustedIdx);
+		if (VERBOSE_PRINTOUT) printf("Type -> %08x\n", adjustedIdx);
 
 		// Set the string position to the domain section. (For Nuts & Bolts, should be "banjox")
 		curVal = str + 4 + strlen(type) + 1;
-
-		printf("%s\n", curVal);
+		if (VERBOSE_PRINTOUT) printf("%s\n", curVal);
 
 		// Now we can move on to generating the hash.
 	}
@@ -1274,20 +1432,19 @@ static uint32_t assetIdGetHash_Typed(char* str) {
 
 		// Gets the type from the provided string.
 		assetGetTypeFromString(curVal, type);
-		printf("Aid Type -> \"%s\"\n", type);
+		if (VERBOSE_PRINTOUT) printf("Aid Type -> \"%s\"\n", type);
 
 		// Gets the type ID from the type string.
 		int32_t idx = GetAssetIDFromType(type);
-		printf("Aid ID -> %d\n", idx);
+		if (VERBOSE_PRINTOUT) printf("Aid ID -> %d\n", idx);
 
 		// Shift the retrieved value as we will be appending it to our hash.
 		adjustedIdx = (idx & 0xFF) << 0x18;
-		printf("Type -> %08x\n", adjustedIdx);
+		if (VERBOSE_PRINTOUT) printf("Type -> %08x\n", adjustedIdx);
 
 		// Set the string position to after the identifier and type.
 		curVal = str + 9 + strlen(type) + 1;
-
-		printf("%s\n", curVal);
+		if (VERBOSE_PRINTOUT) printf("%s\n", curVal);
 
 		// Now we can move on to generating the hash.
 	}
@@ -1300,41 +1457,46 @@ static uint32_t assetIdGetHash_Typed(char* str) {
 		// Increment the string.
 		curVal++;
 
-		printf("Current Hash -> %08x | ", hash);
-
-		printf("Curr Char -> %c | ", currChar);
+		if (VERBOSE_PRINTOUT) {
+			printf("Current Hash -> %08x | ", hash);
+			printf("Curr Char -> %c | ", currChar);
+		}
 
 		// Mask out the first byte of the hash and XOR it with the current character in the string.
 		val = (hash & 0x000000FF) ^ currChar;
 
-		printf("Value -> %d | ", val);
+		if (VERBOSE_PRINTOUT) printf("Value -> %d | ", val);
 
 		// Shift the current hash right by 8 and mask out.
 		shift = (hash >> 8) & 0x00FFFFFF;
 
-		printf("Shift -> %d | ", shift);
+		if (VERBOSE_PRINTOUT) printf("Shift -> %d | ", shift);
 
 		// Shift our current value by 2 bytes to the left.
 		valShift = val << 2;
 
-		printf("Shifted Val -> %d | ", valShift);
-
-		printf("Hash Arr Val -> %u | ", flipEndian(getIntFromHashArray((int32_t)valShift)));
+		if (VERBOSE_PRINTOUT) {
+			printf("Shifted Val -> %d | ", valShift);
+			printf("Hash Arr Val -> %u | ", flipEndian(getIntFromHashArray((int32_t)valShift)));
+		}
+		
 
 		// Get an integer from an array of bytes, flip it and XOR by our shift mask.
 		hash = flipEndian(getIntFromHashArray((int32_t)valShift)) ^ shift;
 
-		printf("Hash Value -> %u (%08X) ", hash, hash);
+		if (VERBOSE_PRINTOUT) {
+			printf("Hash Value -> %u (%08X) ", hash, hash);
+			printf("\n");
+		}
 
 		// Get the next character in the string and repeat until we are done.
 		currChar = *curVal;
-		printf("\n");
 	}
 
 	// Finally, append our type ID to the hash.
 	uint32_t finalVal = hash & 0x00ffffff | adjustedIdx;
 
-	printf("Final Hash -> %08x\n", finalVal);
+	if (VERBOSE_PRINTOUT) printf("Final Hash -> %08x\n", finalVal);
 
 	// And now, we return our hash.
 	return finalVal;
@@ -1347,7 +1509,7 @@ static uint32_t assetIdGetHash_Typed(char* str) {
 /// <param name="str"></param>
 /// <returns>An unsigned 64-bit value containing the hash.</returns>
 static uint64_t assetIdGetHash_BaseExt(char* str) {
-	printf("Inserted file %s\n", str);
+	if (VERBOSE_PRINTOUT) printf("Inserted file %s\n", str);
 
 	if (*str == '\0') {
 		printf("A blank string has been used for assetIdGetHash_BaseExt(), this won't do anything.\n");
@@ -1418,8 +1580,8 @@ static uint64_t assetIdGetHash_BaseExt(char* str) {
 	// Finally, append our adjusted type ID to the hash.
 	uint64_t finalVal = adjustedIdx | hash & 0x1ffffffffffffff;
 
-	printf("Hash -> 0x%016I64x\n", finalVal);
-
+	if (VERBOSE_PRINTOUT) printf("Hash -> 0x%016I64x\n", finalVal);
+	
 	// And now, we return our hash.
 	return finalVal;
 }
@@ -1431,7 +1593,7 @@ static uint64_t assetIdGetHash_BaseExt(char* str) {
 /// <param name="str"></param>
 /// <returns>An unsigned integer containing the hash.</returns>
 static uint32_t assetIdGetHash_Base(char* str) {
-	//printf("Inserted file %s\n", str);
+	if (VERBOSE_PRINTOUT) printf("Inserted file %s\n", str);
 
 	if (*str == '\0') {
 		printf("A blank string has been used for assetIdGetHash_Base(), this won't do anything.\n");
@@ -1454,26 +1616,26 @@ static uint32_t assetIdGetHash_Base(char* str) {
 	while (currChar != '\0') {
 		curVal++;
 
-		//printf("Current Hash -> %08x | ", hash);
+		if (VERBOSE_PRINTOUT) printf("Current Hash -> %08x | ", hash);
 
-		//printf("Curr Char -> %c | ", currChar);
+		if (VERBOSE_PRINTOUT) printf("Curr Char -> %c | ", currChar);
 
 		hash = hash * 0x10 + (currChar & 0xdf);
 
 		val = hash & 0xf0000000;
 
-		//printf("Value -> %u | ", val);
+		if (VERBOSE_PRINTOUT) printf("Value -> %u | ", val);
 		
 		if (val != 0) {
 			hash = hash ^ (val | val >> 0x18);
 		}
 
-		//printf("\n");
+		if (VERBOSE_PRINTOUT) printf("\n");
 
 		currChar = *curVal;
 	}
 
-	//printf("Final Hash -> %08x\n", hash);
+	if (VERBOSE_PRINTOUT) printf("Final Hash -> %08x\n", hash);
 
 	// And now, we return our hash.
 	return hash;

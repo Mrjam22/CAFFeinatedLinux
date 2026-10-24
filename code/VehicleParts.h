@@ -50,6 +50,39 @@ const char* COLNAME_ARR[] = {
 	"Brown"
 };
 
+enum padInput_NutsBolts_e : int32_t
+{
+	PAD_BUTTON_UP = 1,
+	PAD_BUTTON_DOWN = 2,
+	PAD_BUTTON_LEFT = 4,
+	PAD_BUTTON_RIGHT = 8,
+	PAD_BUTTON_START = 0x10,
+	PAD_BUTTON_BACK = 0x20,
+	PAD_BUTTON_LEFT_THUMB = 0x40,
+	PAD_BUTTON_RIGHT_THUMB = 0x80,
+	PAD_BUTTON_LEFT_SHOULDER = 0x100,
+	PAD_BUTTON_RIGHT_SHOULDER = 0x200,
+	PAD_BUTTON_A = 0x1000,
+	PAD_BUTTON_B = 0x2000,
+	PAD_BUTTON_X = 0x4000,
+	PAD_BUTTON_Y = 0x8000,
+	PAD_TRIGGER_L = 0x10000,
+	PAD_TRIGGER_R = 0x20000,
+	
+	PAD_BUTTON_ALL = 0x3f3ff,
+	
+	PAD_STICK_RIGHT_UP = 1,
+	PAD_STICK_RIGHT_UPLEFT = 2,
+	PAD_STICK_RIGHT_LEFT = 4,
+	PAD_STICK_RIGHT_DOWNLEFT = 8,
+	PAD_STICK_RIGHT_DOWN = 0x10,
+	PAD_STICK_RIGHT_DOWNRIGHT = 0x20,
+	PAD_STICK_RIGHT_RIGHT = 0x40,
+	PAD_STICK_RIGHT_UPRIGHT = 0x80,
+	PAD_STICK_LEFT_UP = 0x400,
+	PAD_STICK_LEFT_UPLEFT = 0x800,
+};
+
 uint32_t GetColorMatch(uint32_t col) {
 	uint32_t doesColMatch = 0;
 	size_t arrSize = sizeof(COL_ARR) / sizeof(COL_ARR[0]);
@@ -194,6 +227,10 @@ const VehiclePartEntry vehicleParts[] = {
 	{ 0xFFFFFFFF, "Jets", true },
 	{ 0x1F207106, "Small Jet" },
 	{ 0x1F0EB2AB, "Large Jet" },
+	
+	// Engine
+	{0xFFFFFFFF, "Fuel-Free Propulsion", true},
+	{ 0x1F2B227B, "Sail" },
 
 		// Fuel
 	{ 0xFFFFFFFF, "Fuel", true },

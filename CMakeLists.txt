@@ -12,7 +12,7 @@ set(CMAKE_INTERMEDIATE_DIR_STRATEGY "SHORT" CACHE STRING "")
 project(CAFFeinated LANGUAGES C CXX)
 
 if(NOT MSVC)
-    add_compile_options(-Wall -Wextra  -w)
+    add_compile_options(-Wno-narrowing -Wall -Wextra  -w)
 endif()
 
 set(CMAKE_CXX_STANDARD 17)
@@ -162,7 +162,7 @@ endif()
 file(GLOB SQUISH_SOURCES CONFIGURE_DEPENDS "${TP}/squish/*.cpp")
 add_library(squish STATIC ${SQUISH_SOURCES})
 target_include_directories(squish PUBLIC "${TP}/squish")
-target_compile_definitions(squish PRIVATE _CRT_SECURE_NO_WARNINGS)
+target_compile_definitions(squish PRIVATE _CRT_SECURE_NO_WARNINGS )
 set_target_properties(squish PROPERTIES DEBUG_OUTPUT_NAME squishd)
 
 file(GLOB IMGUI_SOURCES CONFIGURE_DEPENDS "${TP}/imgui/*.cpp")
@@ -221,7 +221,8 @@ elseif(APPLE)
      <stdint.h>
      <stdio.h>
      <stdlib.h>
-     <string.h>)
+     <string.h>
+     "code/crosslib.h")
 
 else()
   set_target_properties(glfw3 nfd zlibstatic squish PROPERTIES FOLDER "thirdparty")
@@ -237,7 +238,8 @@ else()
      <stdint.h>
      <stdio.h>
      <stdlib.h>
-     <string.h>)
+     <string.h>
+      "code/crosslib.h")
 endif()
 
 if(APPLE)

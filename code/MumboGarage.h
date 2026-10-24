@@ -12,6 +12,7 @@ void ReadGhoulBundleTexture();
 void ReadGhoulDemandTexture();
 
 //h
+void countTimeToLoad();
 void ReadConkerLiveReloadedTexture(char* gpuData);
 
 //CAFF Stuff
@@ -19,14 +20,21 @@ void readCaffFile();
 void writeCaffFile(const char* fileName);
 void writeStreamBundleFile(const char* fileName);
 void disposeAndCloseActiveFile();
+void disposeAndCloseDataForFolderFile();
 void writeDataToFile(const char* fileName, const char* filter, char* data, size_t dataSize);
 
-void exportFilesFromBundleRaw();
-void exportFilesFromBundleSpecial();
+void exportFilesFromBundleRaw(int fileCount);
+void exportFilesFromBundleSpecial(int fileCount);
 
 static void openPinataDbBundle();
+static void openPinataPKGBundle();
 void fillPinataDbBundleFileList();
+void fillPinataPKGFileList();
 void displayActivePinataDbBundleFileProperty();
+void displayActivePinataPKGFileProperty();
+void displayPinataDbFileInfo();
+void displayPinataPkgInfo();
+static unsigned char* GetRawImageData_Pinata(char* data, int32_t width, int32_t height, int32_t type);
 
 // RR RPK Stuff
 static void openRareRPKFile();
@@ -34,22 +42,36 @@ void displayRPKInfo();
 void fillRPKFileList();
 void displayActiveRPKFileProperty();
 
-//Image Functions
+void readFolderGroup();
+void readFolderLogicGroup(char* outPath);
+void fillFolderGroupList();
 
-static GLuint LoadResourceImage(int32_t  resourceName, const wchar_t* resourceType);
+//Image Functions
+void ExportXenonTextures(char* exportPath, char* baseLabel);
 static GLuint LoadImageFromData_Base(char* data, int32_t  width, int32_t  height, int32_t  type);
 static GLuint LoadImageFromData_Pinata(char* data, int32_t  width, int32_t  height, int32_t  type);
 static GLuint LoadImageFromData_Banjo(char* data, int32_t  width, int32_t  height, int32_t  type, int32_t  isSwizzled);
 static GLuint LoadImageFromData(unsigned char* data, int32_t  width, int32_t  height, int32_t  format, int32_t  type);
-static GLFWimage LoadResourceImageToGLFWImage(int32_t  resourceName, const wchar_t* resourceType);
-static unsigned char* GetRawImageData_Base(char* data, int32_t  width, int32_t  height, int32_t  type);
-static unsigned char* GetRawImageData_Banjo(char* data, int32_t  width, int32_t  height, int32_t  type, int32_t  isSwizzled);
 
+#ifdef _WIN32
+static GLFWimage LoadResourceImageToGLFWImage(int32_t  resourceName, const wchar_t* resourceType);
+static GLuint LoadResourceImage(int32_t  resourceName, const wchar_t* resourceType);
 static ImFont* LoadResourceFont(int32_t  resourceName, const wchar_t* resourceType, float extraSize);
+#endif
+
+#ifndef _WIN32
+static GLFWimage LoadResourceImageToGLFWImage(char* resourceName, const wchar_t* resourceType);
+static GLuint LoadResourceImage(char*  resourceName, const wchar_t* resourceType);
+static ImFont* LoadResourceFont(char*  resourceName, const wchar_t* resourceType, float extraSize);
+#endif
+static unsigned char* GetRawImageData_Base(char* data, int32_t  width, int32_t  height, int32_t  type);
+static unsigned char* GetRawImageData_Xenon(char* data, int32_t  width, int32_t  height, int32_t  type);
+
 
 int32_t  mainWindowCode();
 void drawWindow();
 void readOtherSupportedFile(int32_t  type);
+void handleSavingAsync(const char* fileName);
 
 //Base Window
 void buildBaseImGuiWindow();
@@ -58,9 +80,11 @@ void buildTitleBar();
 void displayFileInfo(float barHeight);
 void displayProperties(float barHeight);
 void displayBundleInfo();
+void displayBundleV40Info();
 void displayBundleV31Info();
 void displayStreamBundleInfo();
-void displayActiveFileProperty();
+void displayActiveBundleV36Property();
+void displayActiveV40BundleProperty();
 void displayActiveBundleV26Property();
 void displayActiveBundleV31Property();
 void displayActiveStreamBundleFileProperty();
@@ -68,9 +92,9 @@ void displayAvailableFilesList(float barHeight);
 void fillBundleFileList();
 void fillKameoDBFileList();
 void fillStreamBundleFileList();
-void fillStreamBundleFileListOfBundle();
 void fillBundleV26FileList();
 void fillBundleV31FileList();
+void fillBundleV40FileList();
 static void ShowMenuFile();
 static void openMenu();
 static void ShowSearchMenu();
@@ -108,15 +132,15 @@ struct StreamedBundleSetup {
 
 struct BundleSetup {
 public:
-	BufferedSave* bufferedSaves;
+	std::vector<BufferedSave> bufferedSaves;
 	int32_t  totalBufferedSavesCount;
-	int32_t * modifiedFileBufferIDs;
+	std::vector<int32_t> modifiedFileBufferIDs;
 	int32_t  modifiedFilesCount;
 	bool isDirty;
 
 	bool haveNewFilesBeenAdded;
 	int32_t  newFilesCount;
-	int32_t * newFileBufferIDs;
+	std::vector<int32_t> newFileBufferIDs;
 
 	bool bundleCompression;
 
@@ -140,56 +164,22 @@ public:
 
 	void AddToSaveBuffer(BufferedSave itemToSave) {
 		isDirty = true;
-		BufferedSave* tmpBuf = new BufferedSave[totalBufferedSavesCount];
-		for (int32_t  i = 0; i < totalBufferedSavesCount; i++) {
-			tmpBuf[i] = bufferedSaves[i];
-		}
 
 		totalBufferedSavesCount++;
-		bufferedSaves = new BufferedSave[totalBufferedSavesCount];
-
-		for (int32_t  i = 0; i < totalBufferedSavesCount - 1; i++) {
-			bufferedSaves[i] = tmpBuf[i];
-		}
-
-		delete tmpBuf;
-
-		bufferedSaves[totalBufferedSavesCount - 1] = itemToSave;
+		bufferedSaves.push_back(itemToSave);
 		printf("Item of ID %d in Section %d added to the save buffer.\n", itemToSave.fileId, itemToSave.sect);
 		printf("Save Buffer now contains %d values.\n", totalBufferedSavesCount);
 	}
 
 	void AddNewFileToSaveBuffer(BufferedSave itemToSave) {
 		isDirty = true;
-		BufferedSave* tmpBuf = new BufferedSave[totalBufferedSavesCount];
-		for (int32_t  i = 0; i < totalBufferedSavesCount; i++) {
-			tmpBuf[i] = bufferedSaves[i];
-		}
-
-		int32_t * tmpNFBuf = new int32_t [newFilesCount];
-		for (int32_t  i = 0; i < totalBufferedSavesCount; i++) {
-			tmpNFBuf[i] = newFileBufferIDs[i];
-		}
 
 		totalBufferedSavesCount++;
 		newFilesCount++;
 
-		bufferedSaves = new BufferedSave[totalBufferedSavesCount];
-		newFileBufferIDs = new int32_t [newFilesCount];
-
-		for (int32_t  i = 0; i < totalBufferedSavesCount; i++) {
-			bufferedSaves[i] = tmpBuf[i];
-		}
-
-		for (int32_t  i = 0; i < totalBufferedSavesCount; i++) {
-			newFileBufferIDs[i] = tmpNFBuf[i];
-		}
-
-		delete tmpBuf;
-		delete tmpNFBuf;
-
-		bufferedSaves[totalBufferedSavesCount - 1] = itemToSave;
-		newFileBufferIDs[newFilesCount - 1] = totalBufferedSavesCount - 1;
+		bufferedSaves.push_back(itemToSave);
+		newFileBufferIDs.push_back(totalBufferedSavesCount - 1);
+		
 		printf("New file with ID %d in Section %d added to the save buffer.\n", itemToSave.fileId, itemToSave.sect);
 		printf("Save Buffer now contains %d values.\n", totalBufferedSavesCount);
 	}
@@ -244,6 +234,7 @@ struct ImGuiGarageWindow {
 	int32_t  bundleSelectedItem = -1;
 	int32_t  streamBundleSelectedBundle = -1;
 	int32_t  streamBundleSelectedItem = -1;
+	float storedScrollY = 0;
 
 	ImFont* defFont;
 	ImFont* jpnFont;

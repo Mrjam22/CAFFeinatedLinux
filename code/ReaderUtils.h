@@ -1,5 +1,5 @@
 #pragma once
-
+#include <memory>
 const int32_t SRC_ENDIANLITTLE = 0;
 const int32_t SRC_ENDIANBIG = 1;
 
@@ -39,6 +39,36 @@ static char* ReadContentsFromFile(char* fileName) {
 	fread(data, sizeof(char), length, currentFile);
 
 	fclose(currentFile);
+
+	return data;
+}
+
+/// <summary>
+/// Reads all of the data from the file passed in.
+/// </summary>
+/// <param name="fileName">The path and name of the file.</param>
+/// <returns>If the file is valid, the data of the file. Otherwise, a null pointer.</returns>
+static char* ReadContentsFromFile(char* fileName, size_t* outSize) {
+	FILE* currentFile = fopen(fileName, "rb");
+
+	if (ferror(currentFile) != 0) {
+		printf("Error occured while trying to open the file.\n");
+		return nullptr;
+	}
+
+	fseek(currentFile, 0L, SEEK_END);
+	int32_t length = ftell(currentFile);
+	fseek(currentFile, 0L, SEEK_SET);
+
+	char* data = (char*)malloc(length);
+
+	fread(data, sizeof(char), length, currentFile);
+
+	fclose(currentFile);
+
+	if (outSize != nullptr) {
+		*outSize = length;
+	}
 
 	return data;
 }

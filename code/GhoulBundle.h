@@ -1,22 +1,49 @@
 #pragma once
+#ifndef _GHOULBUNDLE
+#define _GHOULBUNDLE
+#include <vector>
 
 static const size_t FILEENTRY_NAMESIZE = 0x80;
+static const size_t FILEENTRY_SIZE = 160;
+
+struct OffsetSet {
+	int32_t offset;
+	int32_t size;
+};
+
+struct GpuList {
+	int32_t tableSize = 0;
+	int32_t entryCount = 0;
+	OffsetSet* offsets;
+};
 
 struct FileEntry {
 	char fileName[0x80];
 
-	int32_t type;
-	uint32_t timestamp;
-	float fUnk1;
-	int32_t iUnk1;
+	int32_t type = 0;
+	uint32_t timestamp = 0;
+	float fUnk1 = 0;
+	int32_t iUnk1 = 0;
 
 	// Actual Section Info
-	int32_t dataSectOffset;
-	int32_t dataSectSize;
-	int32_t gpuSectOffset;
-	int32_t gpuSectSize;
+	int32_t dataSectOffset = 0;
+	int32_t dataSectSize = 0;
+	int32_t gpuListOffset = 0;
+	int32_t gpuSectAndListSize = 0;
 
 	~FileEntry();
+};
+
+struct DirtyGpuSect {
+	char* newData = nullptr;
+	int32_t gpuSize = 0;
+};
+
+struct DirtyFile {
+	char* newDataSect = nullptr;
+	int32_t dataSize = 0;
+
+	DirtyGpuSect* gpuSects;
 };
 
 struct GhoulBundle {
@@ -30,7 +57,6 @@ struct GhoulBundle {
 	int32_t iUnk1;
 
 	// Sections
-
 	int32_t fileListOffset;
 	int32_t fileListDataSize;
 	int32_t gpuListOffset;
@@ -40,10 +66,13 @@ struct GhoulBundle {
 	int32_t dataSectOffset;
 	int32_t dataSectSize;
 
-	FileEntry* fileEntries;
+	std::vector<FileEntry> fileEntries;
+	std::vector <GpuList> gpuList;
+	std::vector <DirtyFile> dirtyFiles;
 
 	bool ReadBundleFile(char* data, size_t dataSize);
 	bool readStandaloneBundleFile(char* fileName);
+	void writeToFile(const char* fileName);
 
 	void ClearBundleFileData();
 
@@ -97,25 +126,26 @@ struct GhoulBundle {
 
 		int32_t size = 0;
 
-		memcpy(&size, listSect + fileEntries[idx].gpuSectOffset, 4);
+		memcpy(&size, listSect + fileEntries[idx].gpuListOffset, 4);
 
 		char* fileData = (char*)malloc(size);
-		memcpy(fileData, listSect + fileEntries[idx].gpuSectOffset, size);
+		memcpy(fileData, listSect + fileEntries[idx].gpuListOffset, size);
 
 		free(listSect);
 		return fileData;
 	}
 
-	char* GetFileGPU(int32_t idx) {
+	char* GetFileGPU(int32_t idx, int32_t slot) {
 		if (idx < 0 || idx >= entryCount) return nullptr;
+		if (slot < 0 || slot >= gpuList[idx].entryCount) return nullptr;
 
 		char* data = GetGpuSection();
 		if (data == nullptr) return nullptr;
 
-		char* fileData = (char*)malloc(fileEntries[idx].gpuSectSize);
-		memcpy(fileData, data + fileEntries[idx].gpuSectOffset, fileEntries[idx].gpuSectSize);
+		char* fileData = (char*)malloc(gpuList[idx].offsets[slot].size);
+		memcpy(fileData, data + gpuList[idx].offsets[slot].offset, gpuList[idx].offsets[slot].size);
 
-		printf("%d %d %d\n", idx, fileEntries[idx].gpuSectOffset, fileEntries[idx].gpuSectSize);
+		printf("%d %d %d\n", idx, gpuList[idx].offsets[slot].offset, gpuList[idx].offsets[slot].size);
 
 		free(data);
 		return fileData;
@@ -129,8 +159,8 @@ struct GhoulBundle {
 
 		int32_t offset = 0;
 		int32_t chunkSize = 0;
-		memcpy(&offset, listSect + fileEntries[idx].gpuSectOffset + 8, 4);
-		memcpy(&chunkSize, listSect + fileEntries[idx].gpuSectOffset + 0xC, 4);
+		memcpy(&offset, listSect + fileEntries[idx].gpuListOffset + 8, 4);
+		memcpy(&chunkSize, listSect + fileEntries[idx].gpuListOffset + 0xC, 4);
 
 		char* data = GetGpuSection();
 		if (data == nullptr) return nullptr;
@@ -145,3 +175,5 @@ struct GhoulBundle {
 		return fileData;
 	}
 };
+
+#endif

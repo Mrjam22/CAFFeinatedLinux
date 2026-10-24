@@ -174,13 +174,13 @@ void DisplayVehicleEditorBaseWindow() {
 					markerWindowParameters.activeVehicle->nameType = 1;
 					if (markerWindowParameters.activeVehicle->vehicleName != nullptr) {
 						//vehicleWindowParameters.activeVehicle->vehicleUnicodeName = compileSToWS(vehicleWindowParameters.activeVehicle->vehicleName, 0x40);
-						wmemcpy(markerWindowParameters.activeVehicle->vehicleUnicodeName, compileSToWS(markerWindowParameters.activeVehicle->vehicleName, 0x40), 0x20);
+						wmemcpy_s(markerWindowParameters.activeVehicle->vehicleUnicodeName, 0x20, compileSToWS(markerWindowParameters.activeVehicle->vehicleName, 0x40), 0x20);
 					}
 				}
 				if (ImGui::Selectable("Tag", markerWindowParameters.activeVehicle->nameType == 0)) {
 					markerWindowParameters.activeVehicle->nameType = 0;
 					if (markerWindowParameters.activeVehicle->vehicleUnicodeName != nullptr) {
-						memcpy(markerWindowParameters.activeVehicle->vehicleName, compileWSToS(markerWindowParameters.activeVehicle->vehicleUnicodeName, 0x40), 0x40);
+						memcpy_s(markerWindowParameters.activeVehicle->vehicleName, 0x40, compileWSToS(markerWindowParameters.activeVehicle->vehicleUnicodeName, 0x40), 0x40);
 						//vehicleWindowParameters.activeVehicle->vehicleName = compileWSToS(vehicleWindowParameters.activeVehicle->vehicleUnicodeName, 0x40);
 					}
 				}
@@ -197,7 +197,7 @@ void DisplayVehicleEditorBaseWindow() {
 			if (markerWindowParameters.activeVehicle->nameType == 1) {
 				char* name = compileWSToS(markerWindowParameters.activeVehicle->vehicleUnicodeName, 0x40);
 				ImGui::InputText("Name", name, 0x20);
-				wmemcpy(markerWindowParameters.activeVehicle->vehicleUnicodeName, compileSToWS(name, 0x40), 0x20);
+				wmemcpy_s(markerWindowParameters.activeVehicle->vehicleUnicodeName, 0x20, compileSToWS(name, 0x40), 0x20);
 				//vehicleWindowParameters.activeVehicle->vehicleUnicodeName = compileSToWS(name, 0x40);
 			}
 			else if (markerWindowParameters.activeVehicle->nameType == 0) {
@@ -321,8 +321,17 @@ void DisplayVehicleEditorBaseWindow() {
 						}
 
 						ImGui::Checkbox("Is Challenge Bonus", (bool*)&markerWindowParameters.activeVehicle->parts[i].isChallengePart);
+						if (ImGui::IsItemHovered() && ImGui::BeginTooltip()) {
+							ImGui::Text("Controls whether the part is a challenge part or not.");
+							ImGui::EndTooltip();
+						}
 
 						ImGui::Checkbox("Is Part Painted", (bool*)&markerWindowParameters.activeVehicle->parts[i].isPainted);
+						if (ImGui::IsItemHovered() && ImGui::BeginTooltip()) {
+							ImGui::Text("Controls whether the part uses the stored RGBA value or the objparam default.");
+							ImGui::EndTooltip();
+						}
+
 						if (markerWindowParameters.activeVehicle->parts[i].isPainted) {
 							DisplayColorBlock(&markerWindowParameters.activeVehicle->parts[i].color);
 						}

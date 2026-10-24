@@ -30,6 +30,18 @@ void GhoulDemand::ReadDemandFile(char* data) {
 			return;
 		}
 
+		if (gpuSectSize != 0) {
+			memcpy(&gpuList.sizeOfTable, data + gpuSectOffset, sizeof(int32_t));
+			memcpy(&gpuList.entryCount, data + gpuSectOffset + 4, sizeof(int32_t));
+
+			gpuList.entries = new DemandGpuListEntry[gpuList.entryCount];
+
+			for (int i = 0; i < gpuList.entryCount; i++) {
+				memcpy(&gpuList.entries[i].offset, data + gpuSectOffset + 8 + (8 * i), sizeof(int32_t));
+				memcpy(&gpuList.entries[i].size, data + gpuSectOffset + 12 + (8 * i), sizeof(int32_t));
+			}
+		}
+
 		isReady = true;
 	}
 	catch (int32_t e) {
@@ -58,4 +70,16 @@ bool GhoulDemand::readStandaloneDemandFile(char* fileName) {
 
 	ReadDemandFile(data);
 	return true;
+}
+
+void GhoulDemand::ClearActiveData() {
+	if (dataPtr != nullptr) {
+		free(dataPtr);
+		dataPtr = nullptr;
+	}
+
+	if (gpuList.entries != nullptr) {
+		delete[] gpuList.entries;
+		gpuList.entries = nullptr;
+	}
 }
