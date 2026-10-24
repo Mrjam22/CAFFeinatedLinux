@@ -37,6 +37,10 @@ jobs:
 
       - name: Build
         run: cmake --build build --config Release
+      - name: Copy resources to .app MacOS folder
+        run: |
+        mkdir -p "build/bin/CAFFeinated.app/Contents/MacOS/resources"
+        cp -R resources/ "build/bin/CAFFeinated.app/Contents/MacOS/resources/"
 
 
       - name: Debug Output Directory
@@ -50,7 +54,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: CAFFeinated-macOS
-          path: build/bin/
+          path: build/bin/CAFFeinated
           if-no-files-found: error
 
       - name: Publish release
