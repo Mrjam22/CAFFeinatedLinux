@@ -34,9 +34,6 @@ void FireMessage(const char* message, ErrorType severity) {
 		return;
 	}
 
-#ifdef __APPLE__
-	AudioServicesPlayAlertSound(kSystemSoundID_UserPreferredAlert);
-#endif
 
 #if _WIN32
 	if (severity == ErrorType_Info) {
