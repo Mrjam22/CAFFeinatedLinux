@@ -346,7 +346,7 @@ enum dbScript_BanjoXEnum : int32_t {
 	dbScript_Play_MovieRandomSelection
 };
 
-const char* GetScriptName_BanjoX(int idx) {
+inline const char* GetScriptName_BanjoX(int idx) {
 	if (idx >= 168) return dbScriptNames[0];
 	return dbScriptNames[idx];
 }
@@ -392,7 +392,7 @@ public:
 	}
 };
 
-dbScript_Base* CreateScriptData(dbScript_BanjoXEnum markerType) {
+inline dbScript_Base* CreateScriptData(dbScript_BanjoXEnum markerType) {
 	switch (markerType) {
 	case dbScript_Setup_PreLoadAsset: { printf("PRELOAD ASSET\n"); return new dbScript_SetupPreLoadAsset(); } break;
 	case dbScript_Debug_Printf: { printf("DEBUG PRINTF\n"); return new dbScript_DebugPrintf(); } break;

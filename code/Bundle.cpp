@@ -4,6 +4,7 @@
 #include "CommonReader.h"
 #include "Bundle.h"
 
+
 bool BundleFile::ReadBundleFile(char* data) {
 	if (data == nullptr) {
 		printf("Passed data array is null.\n");

@@ -35,7 +35,6 @@ void displayActivePinataPKGFileProperty();
 void displayPinataDbFileInfo();
 void displayPinataPkgInfo();
 static unsigned char* GetRawImageData_Pinata(char* data, int32_t width, int32_t height, int32_t type);
-void ReadPinataTexture();
 
 // RR RPK Stuff
 static void openRareRPKFile();
@@ -49,16 +48,25 @@ void fillFolderGroupList();
 
 //Image Functions
 void ExportXenonTextures(char* exportPath, char* baseLabel);
-static GLuint LoadResourceImage(int32_t  resourceName, const wchar_t* resourceType);
 static GLuint LoadImageFromData_Base(char* data, int32_t  width, int32_t  height, int32_t  type);
 static GLuint LoadImageFromData_Pinata(char* data, int32_t  width, int32_t  height, int32_t  type);
 static GLuint LoadImageFromData_Banjo(char* data, int32_t  width, int32_t  height, int32_t  type, int32_t  isSwizzled);
-static GLuint LoadImageFromData(unsigned char* data, int32_t  width, int32_t  height, int32_t  format, int32_t type);
+static GLuint LoadImageFromData(unsigned char* data, int32_t  width, int32_t  height, int32_t  format, int32_t  type);
+
+#ifdef _WIN32
 static GLFWimage LoadResourceImageToGLFWImage(int32_t  resourceName, const wchar_t* resourceType);
+static GLuint LoadResourceImage(int32_t  resourceName, const wchar_t* resourceType);
+static ImFont* LoadResourceFont(int32_t  resourceName, const wchar_t* resourceType, float extraSize);
+#endif
+
+#ifndef _WIN32
+static GLFWimage LoadResourceImageToGLFWImage(char* resourceName, const wchar_t* resourceType);
+static GLuint LoadResourceImage(char*  resourceName, const wchar_t* resourceType);
+static ImFont* LoadResourceFont(char*  resourceName, const wchar_t* resourceType, float extraSize);
+#endif
 static unsigned char* GetRawImageData_Base(char* data, int32_t  width, int32_t  height, int32_t  type);
 static unsigned char* GetRawImageData_Xenon(char* data, int32_t  width, int32_t  height, int32_t  type);
 
-static ImFont* LoadResourceFont(int32_t  resourceName, const wchar_t* resourceType, float extraSize);
 
 int32_t  mainWindowCode();
 void drawWindow();
