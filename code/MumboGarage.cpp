@@ -724,7 +724,7 @@ void exportFilesFromBundleRaw(int fileCount) {
 					return;
 				}
 
-				char* data = bundleFile.V36Bundle->getFileData(currentFileName, i);
+				char* data = bundleFile.V36Bundle->getFileData(i);
 
 				size_t written = fwrite(data, sizeof(char), bundleFile.V36Bundle->sectionTable.fileInfos[i].size, writeFile);
 
@@ -1080,7 +1080,7 @@ void exportFilesFromBundleSpecial(int fileCount) {
 					break;
 				}
 
-				char* data = bundleFile.V36Bundle->getFileData(currentFileName, i);
+				char* data = bundleFile.V36Bundle->getFileData(i);
 
 				switch (typeId) {
 				case 0x11:
@@ -1185,10 +1185,11 @@ static void openPinataPKGBundle() {
 	}
 }
 
-static void openGhouliesBundle() {
+static void openPinataPKGBundle() {
 	nfdchar_t* outPath = NULL;
+	nfdu8filteritem_t filters[1] = { { "PKG File", "pkg" } };
 
-	if (NFD_OpenDialogU8(&outPath, NULL, 0, "") == NFD_OKAY) {
+	if (NFD_OpenDialogU8(&outPath, filters, 1, "") == NFD_OKAY) {
 
 		if (fileType != NONE) {
 			disposeAndCloseActiveFile();
@@ -1951,7 +1952,7 @@ void displayActiveBundleV36Property() {
 			ImGui::PushID(label);
 			if (ImGui::Button(label)) {
 				char* activeSect = 0;
-				activeSect = bundleFile.V36Bundle->getFileData(currentFileName, s);
+				activeSect = bundleFile.V36Bundle->getFileData(s);
 
 				char file[1024];
 				memset(file, 0, 1024);
@@ -2021,7 +2022,7 @@ void displayActiveBundleV36Property() {
 	case 0:
 		if (ImGui::Button("Load Vehicle")) {
 			char* activeSect = 0;
-			activeSect = bundleFile.V36Bundle->getFileData(currentFileName, idData);
+			activeSect = bundleFile.V36Bundle->getFileData(idData);
 
 			FreeVehicleWindowVehicleMemory();
 
@@ -2100,7 +2101,7 @@ void displayActiveBundleV36Property() {
 	case 0xD:
 		if (ImGui::Button("Load Marker File")) {
 			char* activeSect = 0;
-			activeSect = bundleFile.V36Bundle->getFileData(currentFileName, idData);
+			activeSect = bundleFile.V36Bundle->getFileData(idData);
 			PRINT("Loading marker data from file \"%s\".\n", lbl);
 
 			SetupLoadingPromptWidget("Currently loading the marker file. Please wait.");
@@ -2110,7 +2111,7 @@ void displayActiveBundleV36Property() {
 	case 0x11:
 		if (ImGui::Button("Load Localization Text")) {
 			char* activeSect = 0;
-			activeSect = bundleFile.V36Bundle->getFileData(currentFileName, idData);
+			activeSect = bundleFile.V36Bundle->getFileData(idData);
 
 			SetupLoadingPromptWidget("Currently loading the loctext file. Please wait.");
 			printf("Loading loctext from file \"%s\".\n", lbl);
@@ -2121,7 +2122,7 @@ void displayActiveBundleV36Property() {
 	case 0x19:
 		if (ImGui::Button("Load Script")) {
 			char* activeSect = 0;
-			activeSect = bundleFile.V36Bundle->getFileData(currentFileName, idData);
+			activeSect = bundleFile.V36Bundle->getFileData(idData);
 
 			GetScriptEditorWindowParameters()->isFileActive = false;
 
@@ -2135,7 +2136,7 @@ void displayActiveBundleV36Property() {
 	case 0x3D:
 		if (ImGui::Button("Load Challenge File")) {
 			char* activeSect = 0;
-			activeSect = bundleFile.V36Bundle->getFileData(currentFileName, idData);
+			activeSect = bundleFile.V36Bundle->getFileData(idData);
 
 			PRINT("Loading challenge data from file \"%s\".\n", lbl);
 			int32_t count = 0;
@@ -4721,6 +4722,269 @@ void fillFolderGroupList() {
 		ImGui::PopID();
 	}
 }
+
+void fillPinataPKGFileList() {
+	if (imGuiWindowInfo.streamBundleSelectedBundle != -1) {
+		if (ImGui::ArrowButton("backToStreamBundle", ImGuiDir_Left)) {
+			imGuiWindowInfo.streamBundleSelectedItem = -1;
+			imGuiWindowInfo.streamBundleSelectedBundle = -1;
+			if (bundleFile.V36Bundle != nullptr)
+				bundleFile.V36Bundle = nullptr;
+			fileIdx = -1;
+			return;
+		}
+		ImGui::SameLine();
+		ImGui::Text("Back to PKG File List");
+		ImGui::Text("Currently Browsing Bundle %d", PinataPKGFile.entries[imGuiWindowInfo.streamBundleSelectedBundle - 1].id);
+		ImGui::Separator();
+		fillBundleFileList();
+		return;
+	}
+
+	// Setup the local parameters needed.
+	char lbl[1024];
+
+	ImGui::Text("File List");
+	ImGui::Separator();
+	for (int32_t i = 0; i < PinataPKGFile.header.entryCount; i++) {
+		ImGui::PushID(i);
+		memset(lbl, 0, 1024);
+
+		sprintf(lbl, "Bundle w/ ID %d", PinataPKGFile.entries[i].id);
+
+
+		if (strlen(imGuiWindowInfo.search) != 0) {
+			if (strstr(lbl, imGuiWindowInfo.search) == NULL) {
+				ImGui::PopID();
+				continue;
+			}
+		}
+
+		if (ImGui::Selectable(lbl, imGuiWindowInfo.streamBundleSelectedItem == i, ImGuiSelectableFlags_AllowDoubleClick)) {
+			if (ImGui::IsMouseDoubleClicked(0)) {
+				imGuiWindowInfo.streamBundleSelectedBundle = i + 1;
+				bundleFile.V36Bundle = &PinataPKGFile.caffEntries[i];
+			}
+			if (imGuiWindowInfo.streamBundleSelectedItem == i) {
+				imGuiWindowInfo.streamBundleSelectedItem = -1;
+			}
+			else {
+				imGuiWindowInfo.streamBundleSelectedItem = i;
+			}
+		}
+
+		ImGui::PopID();
+	}
+}
+
+void fillFolderGroupList() {
+	if (imGuiWindowInfo.streamBundleSelectedBundle != -1) {
+		if (ImGui::ArrowButton("backToStreamBundle", ImGuiDir_Left)) {
+			disposeAndCloseDataForFolderFile();
+			return;
+		}
+		ImGui::SameLine();
+		ImGui::Text("Back to Folder Group List");
+		ImGui::Separator();
+		switch (folderFile.currentType) {
+		case BUNDLEV26: {
+			fillBundleV26FileList();
+		}
+		break;
+		case BUNDLEV31: {
+			fillBundleV31FileList();
+		}
+		break;
+		case BUNDLEV36: {
+			fillBundleFileList();
+		}
+		break;
+		case BUNDLEV40: {
+			fillBundleV40FileList();
+		}
+		break;
+		case GHOUL_BUNDLE: {
+			fillGhouliesBundleFileList();
+		}
+		break;
+		case PINATA_PKG: {
+			fillPinataPKGFileList();
+		}
+		break;
+		case RR_RPK: {
+			fillRPKFileList();
+		}
+		break;
+		}
+		return;
+	}
+
+	ImGui::Checkbox("Show Unrecognised Files", &folderFile.showInvalidFiles);
+
+	// Setup the local parameters needed.
+	char lbl[1024];
+
+	char tmpSearchFileName[16] = { 0 };
+	char tmpSearchFileNamePlain [16] = { 0 };
+	if (strlen(imGuiWindowInfo.search) != 0) {
+		if (strstr(imGuiWindowInfo.search, "banjox") != nullptr) {
+			uint32_t aid = assetIdGetHash_Typed(imGuiWindowInfo.search);
+			sprintf(tmpSearchFileNamePlain, "%02x%02x%02x%02x", (aid >> 24), (aid >> 16) & 0xFF, (aid >> 8) & 0xFF, aid & 0xFF);
+
+			if ((aid >> 24) == 0x11 || (aid >> 24) == 0x36) {
+
+				sprintf(tmpSearchFileName, "%02x\\%02x\\%02x\\%02x", (aid >> 24) & 0xFF, (aid >> 16) & 0xFF, (aid >> 8) & 0xFF, aid & 0xFF);
+			}
+			else {
+
+				sprintf(tmpSearchFileName, "%02x\\%02x%02x%02x", (aid >> 24) & 0xFF, (aid >> 16) & 0xFF, (aid >> 8) & 0xFF, aid & 0xFF);
+			}
+		}
+		if(strstr(imGuiWindowInfo.search, "ghoulies") != nullptr || strstr(imGuiWindowInfo.search, "pinata") != nullptr) {
+			uint32_t aid = assetIdGetHash_Base(imGuiWindowInfo.search);
+
+			sprintf(tmpSearchFileNamePlain, "%02x%02x%02x%02x", (aid >> 24), (aid >> 16) & 0xFF, (aid >> 8) & 0xFF, aid & 0xFF);
+			sprintf(tmpSearchFileName, "%02x%02x%02x%02x", (aid >> 24) & 0xFF, (aid >> 16) & 0xFF, (aid >> 8) & 0xFF, aid & 0xFF);
+		}
+	}
+
+	ImGui::Text("File List");
+	ImGui::Separator();
+	for (int32_t i = 0; i < folderFile.fileCount; i++) {
+		if (folderFile.fileTypes[i] == NONE && !folderFile.showInvalidFiles) continue;
+
+		if (strlen(imGuiWindowInfo.search) != 0) {
+			bool passedSearch = false;
+
+			if (strstr(folderFile.fileNames[i], imGuiWindowInfo.search) != NULL) {
+				passedSearch = true;
+			}
+
+			if (strstr(folderFile.fileNames[i], tmpSearchFileName) != NULL) {
+				passedSearch = true;
+			}
+
+			if (strstr(folderFile.fileNames[i], tmpSearchFileNamePlain) != NULL) {
+				passedSearch = true;
+			}
+
+			if (!passedSearch) {
+				continue;
+			}
+		}
+		memset(lbl, 0, 1024);
+		strcpy(lbl, folderFile.fileNames[i]);
+
+		ImGui::PushID(i);
+
+		switch (folderFile.fileTypes[i]) {
+			case NONE: {
+				strcat(lbl, " (Invalid, Unrecognised or Bad File)");
+			}
+			break;
+			case BUNDLEV26: {
+				strcat(lbl, " (V0026 File)");
+			}
+			break;
+			case BUNDLEV31: {
+				strcat(lbl, " (V0031 File)");
+			}
+			break;
+			case BUNDLEV36: {
+				strcat(lbl, " (V0036 File)");
+			}
+			break;
+			case BUNDLEV40: {
+				strcat(lbl, " (V0040 File)");
+			}
+			break;
+			case GHOUL_BUNDLE: {
+				strcat(lbl, " (Ghoulies Bundle)");
+			}
+			break;
+			case GHOUL_DEMAND: {
+				strcat(lbl, " (Ghoulies On-Demand)");
+			}
+			break;
+			case PINATA_DBBUNDLE: {
+				strcat(lbl, " (VP DVD)");
+			}
+			break;
+			case PINATA_PKG: {
+				strcat(lbl, " (VP PKG)");
+			}
+			break;
+			case RR_RPK: {
+				strcat(lbl, " (Rare Replay RPK)");
+			}
+			break;
+		}
+
+		
+		ImGui::BeginDisabled(folderFile.fileTypes[i] == NONE || folderFile.fileTypes[i] == PINATA_DBBUNDLE);
+		if (ImGui::Selectable(lbl, imGuiWindowInfo.streamBundleSelectedItem == i, ImGuiSelectableFlags_AllowDoubleClick)) {
+			if (ImGui::IsMouseDoubleClicked(0)) {
+				strcat(currentFileName, "\\");
+				strcat(currentFileName, folderFile.fileNames[i]);
+				imGuiWindowInfo.streamBundleSelectedBundle = i + 1;
+				switch (folderFile.fileTypes[i]) {
+				case BUNDLEV26: {
+					if (bundleFile.V26Bundle == nullptr) {
+						bundleFile.V26Bundle = new BundleV26();
+					}
+				}
+				break;
+				case BUNDLEV31: {
+					if (bundleFile.V31Bundle == nullptr) {
+						bundleFile.V31Bundle = new BundleV31();
+					}
+				}
+				break;
+				case BUNDLEV36: {
+					if (bundleFile.V36Bundle == nullptr) {
+						bundleFile.V36Bundle = new BundleV36();
+					}
+					bundleFile.V36Bundle->readStandaloneBundleFile(currentFileName);
+				}
+				break;
+				case BUNDLEV40: {
+					if (bundleFile.V40Bundle == nullptr) {
+						bundleFile.V40Bundle = new BundleV40();
+					}
+					bundleFile.V40Bundle->readStandaloneBundleFile(currentFileName);
+				}
+				break;
+				case GHOUL_BUNDLE: {
+					ghoulBundleFile.readStandaloneBundleFile(currentFileName);
+				}
+				break;
+				case GHOUL_DEMAND: {
+					ghoulDemandFile.readStandaloneDemandFile(currentFileName);
+				}
+				break;
+				case PINATA_PKG: {
+					PinataPKGFile.readStandalonePkgFile(currentFileName);
+				}
+				break;
+				case RR_RPK: {
+					rpkFile.readStandaloneRPKFile(currentFileName);
+				}
+				break;
+				}
+				folderFile.currentType = folderFile.fileTypes[i];
+			}
+			if (imGuiWindowInfo.streamBundleSelectedItem == i) {
+				imGuiWindowInfo.streamBundleSelectedItem = -1;
+			}
+			else {
+				imGuiWindowInfo.streamBundleSelectedItem = i;
+			}
+		}
+		ImGui::EndDisabled();
+
+		ImGui::PopID();
+	}
+}
 #pragma endregion
 
 void readMarkerFile(char* data) {
@@ -5506,6 +5770,47 @@ void TestBundleRecompilation() {
 			}
 			memset(typeStr, 0, 32);
 
+	if (activeManifest != nullptr) {
+		delete(activeManifest);
+		activeManifest = nullptr;
+	}
+
+	if (activeTex != nullptr) {
+		free(activeTex);
+		activeTex = nullptr;
+	}
+
+	activeConkerTex.refresh = true;
+
+	if (activeGhoulTex != nullptr) {
+		activeGhoulTex->refresh = true;
+		free(activeGhoulTex);
+		activeGhoulTex = nullptr;
+	}
+
+	if (tempTexInt != -1) {
+		glDeleteTextures(1, &tempTexInt);
+	}
+
+	tempTexInt = -1;
+}
+
+void TestBundleRecompilation() {
+	for (int32_t i = 0; i < bundleFile.V36Bundle->header.numSectionTypes; i++) {
+
+		int32_t shiftingOffset = 0;
+		int32_t sectSize = 0;
+		
+		char typeStr[32] = {0};
+
+		for (int32_t f = 0; f < bundleFile.V36Bundle->header.numAssets; f++) {
+			int32_t id = bundleFile.V36Bundle->GetMatchingFileInfoIdx(f + 1, i + 1);
+			if (id == -1) {
+				printf("Entry %s (%d - %d) is not valid. Skipping.\n", bundleFile.V36Bundle->sectionTable.fileLabelTable.fileLabels[f], f + 1, i + 1);
+				continue;
+			}
+			memset(typeStr, 0, 32);
+
 			int32_t offsetRemains = 0;
 			int32_t originalPos = 0;
 			int32_t newSize = 0;
@@ -5639,6 +5944,170 @@ void ExportXenonTextures(char* exportPath, char* baseLabel)
 	
 	int32_t sectGpu = bundleFile.V36Bundle->getGPUFileInfoIdxFromFileIdx(fileId);
 	char* gpuSect = bundleFile.V36Bundle->getFileData(currentFileName, sectGpu);
+
+	int32_t bpp = 4;
+	int32_t width = activeTex->headerSect.width;
+	int32_t height = activeTex->headerSect.height;
+	
+	uint32_t format = activeTex->headerSect.format;
+	
+	switch (format)
+	{
+	case D3DFMT_DXT1:
+	case D3DFMT_LIN_DXT1:
+		{
+			bpp = 2;
+			int32_t remainW = activeTex->headerSect.width % 128;
+			int32_t remainH = activeTex->headerSect.height % 128;
+			if (remainW != 0)
+			{
+				width = activeTex->headerSect.width + (128 - remainW);
+			}
+			if (remainH != 0)
+			{
+				height = activeTex->headerSect.height + (128 - remainH);
+			}
+		}
+	break;
+	case D3DFMT_DXT3:
+	case D3DFMT_LIN_DXT3:
+	case D3DFMT_DXT3A:
+	case D3DFMT_LIN_DXT3A:
+	case D3DFMT_DXT5:
+	case D3DFMT_LIN_DXT5:
+	case D3DFMT_DXT5A:
+	case D3DFMT_LIN_DXT5A:
+	case D3DFMT_DXN:
+	case D3DFMT_LIN_DXN:
+		{
+			bpp = 1;
+			int32_t remainW = activeTex->headerSect.width % 128;
+			int32_t remainH = activeTex->headerSect.height % 128;
+			if (remainW != 0)
+			{
+				width = activeTex->headerSect.width + (128 - remainW);
+			}
+			if (remainH != 0)
+			{
+				height = activeTex->headerSect.height + (128 - remainH);
+			}
+		}
+	case D3DFMT_A8R8G8B8:
+	case D3DFMT_LIN_A8R8G8B8:
+	case D3DFMT_A8B8G8R8:
+	case D3DFMT_LIN_A8B8G8R8:
+	case D3DFMT_X8R8G8B8:
+	case D3DFMT_LIN_X8R8G8B8:
+		{
+			bpp = 4;
+			int multiple = 16;
+			if (!activeTex->isPinataTex)
+			{
+				multiple = 64;
+			}
+			int32_t remainW = activeTex->headerSect.width % multiple;
+			int32_t remainH = activeTex->headerSect.height % multiple;
+			if (remainW != 0)
+			{
+				width = activeTex->headerSect.width + (multiple - remainW);
+			}
+			if (remainH != 0)
+			{
+				height = activeTex->headerSect.height + (multiple - remainH);
+			}
+			printf("%d %d -> %d %d\n",remainW, remainH, width, height);
+			stbi_flip_vertically_on_write(false);
+		}
+	break;
+	}
+
+	int32_t chunkSize = (width * height) * bpp;
+
+	if (activeTex->headerSect.gpuOffsTablePos == 0) {
+		chunkSize = bundleFile.V36Bundle->sectionTable.fileInfos[sectGpu].size;
+	}
+	
+	if (activeTex->isPinataTex)
+	{
+		chunkSize = activeTex->pinataTexture.sizeOfOneFrame;
+	}
+	
+	
+	for (int32_t i = 0; i < 1; i++) {
+		memset(filePath, 0, 128);
+		sprintf(filePath, "%s/%s_%03d.png", exportPath, baseLabel, i);
+		PRINT("Export image %s_%03d.png to %s.\n", baseLabel, i, exportPath);
+
+		char* texData = (char*)malloc(chunkSize);
+		memset(texData, 0, chunkSize);
+		if (!activeTex->isPinataTex)
+		{
+			memcpy(texData, gpuSect + activeTex->headerSect.gpuOffsTable[i], chunkSize);
+		}
+		else
+		{
+			memcpy(texData, gpuSect + (chunkSize * i), chunkSize);
+		}
+
+		unsigned char* imgData = nullptr;
+
+		imgData = GetRawImageData_Xenon(texData, width, height, format);
+		
+		stbi_flip_vertically_on_write(false);
+		int32_t success = stbi_write_png(filePath, activeTex->headerSect.width, activeTex->headerSect.height, 4, imgData, width * 4);
+
+		if (success == 1) {
+			PRINT("Image has been successfully exported.\n");
+		}
+		else {
+			ASSERT("An error occured while trying to export the image. Error Code 0x%08x.\n", success);
+		}
+		
+		if (texData != nullptr)
+		{
+			free(texData);
+		}
+		delete[] imgData;
+	}
+
+	free(gpuSect);
+}
+
+void ReadPinataTexture() {
+	int32_t dataInfoIdx = bundleFile.V36Bundle->getFileInfoIdxFromFileIdx(fileId, 0);
+	int32_t gpuInfoIdx = bundleFile.V36Bundle->getFileInfoIdxFromFileIdx(fileId, 1);
+
+	if (gpuInfoIdx == -1) return;
+
+	char* dataSect = bundleFile.V36Bundle->getFileData(dataInfoIdx);
+
+	activePinataTex.ReadTextureInfo(dataSect, bundleFile.V36Bundle->header.byteswapFlags);
+
+	free(dataSect);
+
+	char* texData = (char*)malloc(activePinataTex.sizeOfOneFrame);
+
+	char* gpuSect = bundleFile.V36Bundle->getFileData(gpuInfoIdx);
+
+	memcpy(texData, gpuSect, activePinataTex.sizeOfOneFrame);
+
+	if (tempTexInt != -1) {
+		glDeleteTextures(1, &tempTexInt);
+	}
+
+	tempTexInt = LoadImageFromData_Pinata(texData, activePinataTex.width, activePinataTex.height, activePinataTex.format);
+	printf("tempTexInt %d\n", tempTexInt);
+
+	free(texData);
+	free(gpuSect);
+}
+
+void ExportXenonTextures(char* exportPath, char* baseLabel)
+{
+	char filePath[2048];
+	
+	int32_t sectGpu = bundleFile.V36Bundle->getGPUFileInfoIdxFromFileIdx(fileId);
+	char* gpuSect = bundleFile.V36Bundle->getFileData(sectGpu);
 
 	int32_t bpp = 4;
 	int32_t width = activeTex->headerSect.width;
@@ -6326,11 +6795,12 @@ static GLuint LoadImageFromData_Base(char* data, int32_t width, int32_t height, 
 		imageData = new unsigned char[(width * height) * 4];
 		memcpy(imageData, data, (width * height) * 4);
 
+	if (type == XboxTexFormat::B8G8R8A8) {
+		
 		format = GL_BGRA;
-		isFormatSupported = true;
 	}
 
-	if (!isFormatSupported) {
+	if (imageData == nullptr) {
 		printf("Provided texture format for Ghoulies is not supported or has not been implemented.\n");
 		return 0;
 	}

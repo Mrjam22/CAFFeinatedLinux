@@ -3,6 +3,7 @@
 #define _CAFFCOMMONFILETYPES
 
 #include "BaseScript.h"
+#include "Loctext.h"
 
 #ifdef _WIN32 
 #define WIN32_LEAN_AND_MEAN

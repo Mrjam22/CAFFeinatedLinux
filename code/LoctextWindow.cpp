@@ -187,6 +187,14 @@ void DisplayLoctextEditorBaseWindow() {
 					if (loctextWindowParameters.hasAssignedFileName) {
 						sprintf(filename, "%s.inf", loctextWindowParameters.originalFilename);
 					}
+					else if (loctextWindowParameters.activeLoctext->currentlyLoadedLoctext == LocT10V4)
+					{
+						sprintf(filename, "%s.inf", loctextWindowParameters.activeLoctext->locTurn10V4File.labelTable.header.fileName);
+					}
+					else if (loctextWindowParameters.activeLoctext->currentlyLoadedLoctext == LocT10V8)
+					{
+						sprintf(filename, "%s.inf", loctextWindowParameters.activeLoctext->locTurn10V8File.labelTable.header.fileName);
+					}
 					else {
 						strcpy(filename, "default.inf");
 					}
